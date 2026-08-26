@@ -1,0 +1,132 @@
+@import url("https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap");
+
+/*---------- GENERAL ----------*/
+* { box-sizing: border-box; }
+
+html, body {
+  margin: 0;
+  background: #6e6e6e;
+  font-family: "Plus Jakarta Sans", Helvetica, sans-serif;
+  color: #14150f;
+  -webkit-font-smoothing: antialiased;
+}
+
+a { color: #14150f; text-decoration: none; }
+a:hover { color: #444; }
+
+.dashboard-main {
+  min-height: 100vh;
+  background: #6e6e6e;
+  display: flex;
+  justify-content: center;
+  padding: 24px;
+}
+
+.dashboard-panel {
+  position: relative;
+  width: 100%;
+  max-width: 1238px;
+  background: #eef4e8;
+  border-radius: 22px;
+  padding: 18px 22px 22px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.dashboard-body {
+  display: grid;
+  grid-template-columns: 308px minmax(0, 1fr) 244px;
+  gap: 12px;
+  flex: 1;
+  min-height: 0;
+}
+
+.dashboard-col {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  min-width: 0;
+  min-height: 0;
+}
+
+.health-skills-grid {
+  display: grid;
+  grid-template-columns: 1.02fr 1fr;
+  gap: 12px;
+  flex: 1;
+  min-height: 0;
+}
+
+.assets-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) minmax(0, 0.82fr);
+  gap: 12px;
+}
+
+.topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.topbar-nav {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: #fff;
+  border-radius: 999px;
+  padding: 5px;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+.topbar-nav::-webkit-scrollbar { display: none; }
+
+.topbar-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.title-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.title-row-controls {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  flex-wrap: wrap;
+}
+
+@media (min-width: 1101px) {
+  .dashboard-panel { height: 878px; }
+}
+
+@media (max-width: 1024px) {
+  .dashboard-body { grid-template-columns: 1fr 1fr; }
+  .dashboard-col--right { grid-column: 1 / -1; }
+  .assets-grid { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
+  .health-skills-grid { grid-template-columns: 1fr; }
+}
+
+@media (max-width: 720px) {
+  .dashboard-main { padding: 12px; align-items: flex-start; }
+  .dashboard-panel { padding: 14px; border-radius: 16px; gap: 12px; }
+  .dashboard-body { grid-template-columns: 1fr; gap: 14px; }
+  .health-skills-grid { grid-template-columns: 1fr; }
+  .assets-grid { grid-template-columns: 1fr; }
+  .topbar-nav { order: 3; width: 100%; }
+  .topbar-actions { order: 2; margin-left: auto; }
+}
+
+@media (max-width: 420px) {
+  .dashboard-main { padding: 8px; }
+  .dashboard-panel { padding: 10px; border-radius: 12px; }
+}
