@@ -66,6 +66,23 @@ export function DotsIcon({ size = 13, color = "#14150f" }) {
   );
 }
 
+export function PencilIcon({ size = 13, color = "#14150f" }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" stroke={color} {...strokeProps}>
+      <path d="M12 20h9" />
+      <path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4z" />
+    </svg>
+  );
+}
+
+export function PlusIcon({ size = 13, color = "#14150f" }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" stroke={color} {...strokeProps}>
+      <path d="M12 5v14M5 12h14" />
+    </svg>
+  );
+}
+
 export function CheckIcon({ size = 9, color = "#fff" }) {
   return (
     <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth={3.4} strokeLinecap="round" strokeLinejoin="round">
