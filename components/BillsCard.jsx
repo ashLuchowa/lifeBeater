@@ -1,7 +1,11 @@
-import { bills } from "@/lib/data";
+"use client";
+
+import { useDashboardData } from "./DashboardData";
 import { CardHeader } from "./ui";
 
 export default function BillsCard() {
+  const { data } = useDashboardData();
+  const { bills } = data;
   return (
     <div style={{ background: "#fff", borderRadius: 18, padding: 16, display: "flex", flexDirection: "column", gap: 9, minWidth: 0 }}>
       <CardHeader title="Upcoming Bills" />

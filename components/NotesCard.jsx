@@ -1,8 +1,12 @@
-import { notes } from "@/lib/data";
+"use client";
+
+import { useDashboardData } from "./DashboardData";
 import { CardHeader } from "./ui";
 import { CheckIcon } from "./icons";
 
 export default function NotesCard() {
+  const { data } = useDashboardData();
+  const { notes } = data;
   return (
     <div style={{ background: "#fff", borderRadius: 18, padding: 16, display: "flex", flexDirection: "column", gap: 8, flex: 1, minWidth: 0, minHeight: 0, overflow: "hidden" }}>
       <CardHeader title="Notes" />

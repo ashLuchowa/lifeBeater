@@ -1,7 +1,11 @@
-import { milestones } from "@/lib/data";
+"use client";
+
+import { useDashboardData } from "./DashboardData";
 import { CardHeader } from "./ui";
 
 export default function Milestones() {
+  const { data } = useDashboardData();
+  const { milestones } = data;
   return (
     <div style={{ background: "#fff", borderRadius: 18, padding: "12px 14px", flex: 1, display: "flex", flexDirection: "column", gap: 7, minHeight: 0, overflow: "hidden" }}>
       <CardHeader title="Milestones" />

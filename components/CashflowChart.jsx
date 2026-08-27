@@ -1,9 +1,13 @@
-import { cashflow } from "@/lib/data";
+"use client";
+
+import { useDashboardData } from "./DashboardData";
 import { CardHeader } from "./ui";
 
 const legendDot = (color) => ({ width: 7, height: 7, borderRadius: 2, background: color, display: "block" });
 
 export default function CashflowChart() {
+  const { data } = useDashboardData();
+  const { cashflow } = data;
   return (
     <div style={{ background: "#fff", borderRadius: 18, padding: 16, display: "flex", flexDirection: "column", gap: 9, minWidth: 0, minHeight: 0, height: 189 }}>
       <CardHeader title="Income / Expense" />

@@ -1,3 +1,4 @@
+import { DashboardDataProvider } from "@/components/DashboardData";
 import TopBar from "@/components/TopBar";
 import ProfileCard from "@/components/ProfileCard";
 import Milestones from "@/components/Milestones";
@@ -11,30 +12,32 @@ import NotesCard from "@/components/NotesCard";
 export default function Page() {
   return (
     <main className="dashboard-main">
-      <div className="dashboard-panel">
-        <TopBar />
+      <DashboardDataProvider>
+        <div className="dashboard-panel">
+          <TopBar />
 
-        <div className="dashboard-body">
-          <div className="dashboard-col">
-            <ProfileCard />
-            <Milestones />
-            <CashflowChart />
-          </div>
+          <div className="dashboard-body">
+            <div className="dashboard-col">
+              <ProfileCard />
+              <Milestones />
+              <CashflowChart />
+            </div>
 
-          <div className="dashboard-col">
-            <AssetsLiabilities />
-            <div className="health-skills-grid">
-              <HealthCard />
-              <SkillsCard />
+            <div className="dashboard-col">
+              <AssetsLiabilities />
+              <div className="health-skills-grid">
+                <HealthCard />
+                <SkillsCard />
+              </div>
+            </div>
+
+            <div className="dashboard-col dashboard-col--right">
+              <BillsCard />
+              <NotesCard />
             </div>
           </div>
-
-          <div className="dashboard-col dashboard-col--right">
-            <BillsCard />
-            <NotesCard />
-          </div>
         </div>
-      </div>
+      </DashboardDataProvider>
     </main>
   );
 }

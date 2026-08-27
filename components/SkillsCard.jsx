@@ -1,7 +1,11 @@
-import { skillGroups } from "@/lib/data";
+"use client";
+
+import { useDashboardData } from "./DashboardData";
 import { CardHeader } from "./ui";
 
 export default function SkillsCard() {
+  const { data } = useDashboardData();
+  const { skillGroups } = data;
   return (
     <div style={{ background: "#fff", borderRadius: 18, padding: 16, display: "flex", flexDirection: "column", gap: 10, minWidth: 0, minHeight: 0 }}>
       <CardHeader title="Skills" large />

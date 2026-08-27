@@ -1,7 +1,11 @@
-import { profile } from "@/lib/data";
+"use client";
+
+import { useDashboardData } from "./DashboardData";
 import { DotsIcon } from "./icons";
 
 export default function ProfileCard() {
+  const { data } = useDashboardData();
+  const { profile } = data;
   return (
     <div style={{ background: "#14150f", color: "#fff", borderRadius: 18, padding: 16, display: "flex", flexDirection: "column", gap: 13 }}>
       <div style={{ display: "flex", alignItems: "center", gap: 13 }}>

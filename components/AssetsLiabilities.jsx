@@ -1,8 +1,12 @@
-import { ledgers, netWorth } from "@/lib/data";
+"use client";
+
+import { useDashboardData } from "./DashboardData";
 import { TitlePill } from "./ui";
 import { DotsIcon } from "./icons";
 
 export default function AssetsLiabilities() {
+  const { data } = useDashboardData();
+  const { ledgers, netWorth } = data;
   return (
     <div style={{ background: "#fff", borderRadius: 18, padding: 16, display: "flex", flexDirection: "column", gap: 14 }}>
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>

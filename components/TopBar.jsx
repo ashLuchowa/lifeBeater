@@ -1,4 +1,10 @@
+"use client";
+
+import { useState } from "react";
 import { HomeIcon, LedgerIcon, BarsIcon, ArrowLeftIcon, ArrowRightIcon } from "./icons";
+import { useDashboardData } from "./DashboardData";
+import DatePicker from "./DatePicker";
+import { formatLong } from "@/lib/snapshots";
 
 const navBase = {
   display: "flex",
@@ -11,7 +17,35 @@ const navBase = {
   whiteSpace: "nowrap",
 };
 
+const arrowBtn = {
+  display: "flex",
+  alignItems: "center",
+  justifyContent: "center",
+  width: 34,
+  height: 34,
+  borderRadius: "50%",
+  border: "0px solid #14150f",
+  background: "transparent",
+  cursor: "pointer",
+  flex: "none",
+};
+
 export default function TopBar() {
+  const {
+    selectedDate,
+    mounted,
+    isToday,
+    snapshotDates,
+    today,
+    goToPrevDay,
+    goToNextDay,
+    goToDate,
+    goToToday,
+  } = useDashboardData();
+  const [pickerOpen, setPickerOpen] = useState(false);
+
+  const dateLabel = mounted ? formatLong(selectedDate) : "…";
+
   return (
     <div className="topbar">
 
@@ -31,14 +65,60 @@ export default function TopBar() {
       </nav>
 
       <div className="topbar-actions">
-        <ArrowLeftIcon />
-        <div style={{ padding: "16px 24px", borderRadius: 999, background: "#fff", fontSize: 17, fontWeight: 700, color: "#000000", whiteSpace: "nowrap" }}>
-          24 August, 2026
+        <button type="button" style={arrowBtn} onClick={goToPrevDay} aria-label="Previous day">
+          <ArrowLeftIcon />
+        </button>
+
+        <div style={{ position: "relative" }}>
+          <button
+            type="button"
+            onClick={() => setPickerOpen((o) => !o)}
+            style={{
+              padding: "16px 24px",
+              borderRadius: 999,
+              background: "#fff",
+              border: "0px solid #14150f",
+              fontSize: 17,
+              fontWeight: 700,
+              color: "#000000",
+              whiteSpace: "nowrap",
+              cursor: "pointer",
+            }}
+          >
+            {dateLabel}
+          </button>
+          {pickerOpen && mounted && (
+            <DatePicker
+              value={selectedDate}
+              today={today}
+              marked={snapshotDates}
+              onSelect={goToDate}
+              onClose={() => setPickerOpen(false)}
+            />
+          )}
         </div>
-        <ArrowRightIcon />
-        <div style={{ padding: "8px 17px", borderRadius: 999, background: "#14150f", color: "#fff", fontSize: 13, fontWeight: 700, whiteSpace: "nowrap" }}>
+
+        <button type="button" style={arrowBtn} onClick={goToNextDay} aria-label="Next day">
+          <ArrowRightIcon />
+        </button>
+
+        <button
+          type="button"
+          onClick={goToToday}
+          style={{
+            padding: "8px 17px",
+            borderRadius: 999,
+            background: isToday ? "#14150f" : "transparent",
+            color: isToday ? "#fff" : "#14150f",
+            border: "2px solid #14150f",
+            fontSize: 13,
+            fontWeight: 700,
+            whiteSpace: "nowrap",
+            cursor: "pointer",
+          }}
+        >
           Today
-        </div>
+        </button>
       </div>
 
     </div>
