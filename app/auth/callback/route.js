@@ -9,12 +9,30 @@ export async function GET(request) {
   const code = searchParams.get("code");
 
   if (code) {
-    const supabase = createClient();
-    const { error } = await supabase.auth.exchangeCodeForSession(code);
-    if (!error) {
-      return NextResponse.redirect(origin);
+    try {
+      const supabase = createClient();
+      const { error } = await withTimeout(
+        supabase.auth.exchangeCodeForSession(code),
+        8000,
+        "exchangeCodeForSession",
+      );
+      if (!error) {
+        return NextResponse.redirect(origin);
+      }
+      console.error("[auth/callback] exchangeCodeForSession error:", error.message);
+    } catch (err) {
+      console.error("[auth/callback] failed:", err.message);
     }
+  } else {
+    console.error("[auth/callback] hit with no ?code param");
   }
 
   return NextResponse.redirect(`${origin}?auth_error=1`);
+}
+
+function withTimeout(promise, ms, label) {
+  return Promise.race([
+    promise,
+    new Promise((_, reject) => setTimeout(() => reject(new Error(`${label} timed out after ${ms}ms`)), ms)),
+  ]);
 }
