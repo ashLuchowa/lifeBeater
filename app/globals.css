@@ -19,6 +19,7 @@ a:hover { color: #444; }
   background: #6e6e6e;
   display: flex;
   justify-content: center;
+  align-items: flex-start;
   padding: 24px;
 }
 
@@ -91,7 +92,7 @@ a:hover { color: #444; }
 }
 
 @media (min-width: 1101px) {
-  .dashboard-panel { height: 878px; }
+  .dashboard-panel { min-height: 878px; }
 }
 
 @media (max-width: 1024px) {
