@@ -1,6 +1,6 @@
 "use client";
 
-import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
+import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
 import { seedData } from "@/lib/data";
 import { addDays, loadAll, resolveForDate, saveAll, todayStr } from "@/lib/snapshots";
 
@@ -11,6 +11,20 @@ export function DashboardDataProvider({ children }) {
   // Empty until mounted so server render and first client render agree (seed data).
   const [selectedDate, setSelectedDate] = useState("");
   const [today, setToday] = useState("");
+  // +1 = moved forward in time, -1 = moved back. Drives the page transition.
+  const [direction, setDirection] = useState(1);
+
+  const selectedDateRef = useRef("");
+  useEffect(() => {
+    selectedDateRef.current = selectedDate;
+  }, [selectedDate]);
+
+  // Point the transition the right way, then move.
+  const goTo = useCallback((target) => {
+    const cur = selectedDateRef.current;
+    if (cur && target) setDirection(target < cur ? -1 : 1);
+    setSelectedDate(target);
+  }, []);
 
   useEffect(() => {
     setSnapshots(loadAll());
@@ -25,11 +39,13 @@ export function DashboardDataProvider({ children }) {
   );
 
   const goToPrevDay = useCallback(() => {
+    setDirection(-1);
     setSelectedDate((d) => (d ? addDays(d, -1) : todayStr()));
   }, []);
 
   // Can't look into the future — the next day doesn't exist yet.
   const goToNextDay = useCallback(() => {
+    setDirection(1);
     setSelectedDate((d) => {
       const t = todayStr();
       const n = d ? addDays(d, 1) : t;
@@ -37,12 +53,15 @@ export function DashboardDataProvider({ children }) {
     });
   }, []);
 
-  const goToDate = useCallback((s) => {
-    const t = todayStr();
-    setSelectedDate(s > t ? t : s);
-  }, []);
+  const goToDate = useCallback(
+    (s) => {
+      const t = todayStr();
+      goTo(s > t ? t : s);
+    },
+    [goTo],
+  );
 
-  const goToToday = useCallback(() => setSelectedDate(todayStr()), []);
+  const goToToday = useCallback(() => goTo(todayStr()), [goTo]);
 
   // Save a snapshot for the selected day. `updater` may be the next snapshot
   // object, or a function receiving a deep copy of the currently effective data.
@@ -69,6 +88,7 @@ export function DashboardDataProvider({ children }) {
       source, // which snapshot date the data came from (null = seed)
       selectedDate,
       today,
+      direction,
       mounted: selectedDate !== "",
       isToday: selectedDate !== "" && selectedDate === today,
       canGoNext: selectedDate !== "" && selectedDate < today,
@@ -80,7 +100,7 @@ export function DashboardDataProvider({ children }) {
       goToToday,
       updateData,
     }),
-    [data, source, selectedDate, today, snapshots, goToPrevDay, goToNextDay, goToDate, goToToday, updateData],
+    [data, source, selectedDate, today, direction, snapshots, goToPrevDay, goToNextDay, goToDate, goToToday, updateData],
   );
 
   return <DashboardDataContext.Provider value={value}>{children}</DashboardDataContext.Provider>;

@@ -35,6 +35,46 @@ a:hover { color: #444; }
   gap: 14px;
 }
 
+.day-transition {
+  position: relative;
+  flex: 1 1 auto;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.day-layer {
+  flex: 1 1 auto;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+.day-layer--out-fwd,
+.day-layer--out-back {
+  position: absolute;
+  inset: 0;
+}
+
+@keyframes day-fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+@keyframes day-fade-out {
+  from { opacity: 1; }
+  to { opacity: 0; }
+}
+
+.day-layer--in-fwd,
+.day-layer--in-back { animation: day-fade-in 0.3s ease; }
+.day-layer--out-fwd,
+.day-layer--out-back { animation: day-fade-out 0.3s ease forwards; }
+
+@media (prefers-reduced-motion: reduce) {
+  .day-layer { animation: none !important; }
+  .day-layer--out-fwd,
+  .day-layer--out-back { display: none; }
+}
+
 .dashboard-body {
   display: grid;
   grid-template-columns: 308px minmax(0, 1fr) 244px;
