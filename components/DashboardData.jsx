@@ -28,11 +28,19 @@ export function DashboardDataProvider({ children }) {
     setSelectedDate((d) => (d ? addDays(d, -1) : todayStr()));
   }, []);
 
+  // Can't look into the future — the next day doesn't exist yet.
   const goToNextDay = useCallback(() => {
-    setSelectedDate((d) => (d ? addDays(d, 1) : todayStr()));
+    setSelectedDate((d) => {
+      const t = todayStr();
+      const n = d ? addDays(d, 1) : t;
+      return n > t ? t : n;
+    });
   }, []);
 
-  const goToDate = useCallback((s) => setSelectedDate(s), []);
+  const goToDate = useCallback((s) => {
+    const t = todayStr();
+    setSelectedDate(s > t ? t : s);
+  }, []);
 
   const goToToday = useCallback(() => setSelectedDate(todayStr()), []);
 
@@ -63,6 +71,7 @@ export function DashboardDataProvider({ children }) {
       today,
       mounted: selectedDate !== "",
       isToday: selectedDate !== "" && selectedDate === today,
+      canGoNext: selectedDate !== "" && selectedDate < today,
       snapshotDates: Object.keys(snapshots),
       hasSnapshot: (s) => Object.prototype.hasOwnProperty.call(snapshots, s),
       goToPrevDay,

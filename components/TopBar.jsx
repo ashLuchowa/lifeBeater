@@ -35,6 +35,7 @@ export default function TopBar() {
     selectedDate,
     mounted,
     isToday,
+    canGoNext,
     snapshotDates,
     today,
     goToPrevDay,
@@ -98,7 +99,17 @@ export default function TopBar() {
           )}
         </div>
 
-        <button type="button" style={arrowBtn} onClick={goToNextDay} aria-label="Next day">
+        <button
+          type="button"
+          style={{
+            ...arrowBtn,
+            cursor: canGoNext ? "pointer" : "not-allowed",
+            opacity: canGoNext ? 1 : 0.3,
+          }}
+          onClick={goToNextDay}
+          disabled={!canGoNext}
+          aria-label="Next day"
+        >
           <ArrowRightIcon />
         </button>
 

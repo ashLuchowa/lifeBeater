@@ -30,6 +30,12 @@ export default function DatePicker({ value, today, marked = [], onSelect, onClos
 
   const cellStr = (d) => toStr(new Date(view.y, view.m, d));
 
+  // Don't let the view page into months that are entirely in the future.
+  const now = today ? fromStr(today) : new Date();
+  const atCurrentMonth = view.y === now.getFullYear() && view.m === now.getMonth();
+  const afterCurrentMonth = view.y > now.getFullYear() || (view.y === now.getFullYear() && view.m > now.getMonth());
+  const nextMonthDisabled = atCurrentMonth || afterCurrentMonth;
+
   return (
     <>
       <div onClick={onClose} style={{ position: "fixed", inset: 0, zIndex: 40 }} />
@@ -55,7 +61,7 @@ export default function DatePicker({ value, today, marked = [], onSelect, onClos
           <div style={{ fontSize: 12.5, fontWeight: 700 }}>
             {MONTHS[view.m]} {view.y}
           </div>
-          <IconButton onClick={() => shiftMonth(1)} label="Next month">
+          <IconButton onClick={() => shiftMonth(1)} label="Next month" disabled={nextMonthDisabled}>
             <ArrowRightIcon size={16} />
           </IconButton>
         </div>
@@ -74,10 +80,12 @@ export default function DatePicker({ value, today, marked = [], onSelect, onClos
             const s = cellStr(d);
             const isSelected = s === value;
             const isToday = s === today;
+            const isFuture = today && s > today;
             return (
               <button
                 key={i}
                 type="button"
+                disabled={isFuture}
                 onClick={() => {
                   onSelect(s);
                   onClose();
@@ -87,11 +95,12 @@ export default function DatePicker({ value, today, marked = [], onSelect, onClos
                   height: 30,
                   border: isToday && !isSelected ? "1px solid #14150f" : "1px solid transparent",
                   borderRadius: 9,
-                  cursor: "pointer",
+                  cursor: isFuture ? "not-allowed" : "pointer",
                   fontSize: 11.5,
                   fontWeight: 700,
                   background: isSelected ? "#14150f" : "transparent",
                   color: isSelected ? "#fff" : "#14150f",
+                  opacity: isFuture ? 0.28 : 1,
                 }}
               >
                 {d}
@@ -118,12 +127,13 @@ export default function DatePicker({ value, today, marked = [], onSelect, onClos
   );
 }
 
-function IconButton({ children, onClick, label }) {
+function IconButton({ children, onClick, label, disabled = false }) {
   return (
     <button
       type="button"
       onClick={onClick}
       aria-label={label}
+      disabled={disabled}
       style={{
         width: 26,
         height: 26,
@@ -133,7 +143,8 @@ function IconButton({ children, onClick, label }) {
         border: "1px solid #e4e7de",
         borderRadius: "50%",
         background: "#fff",
-        cursor: "pointer",
+        cursor: disabled ? "not-allowed" : "pointer",
+        opacity: disabled ? 0.3 : 1,
       }}
     >
       {children}
