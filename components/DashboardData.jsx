@@ -2,13 +2,19 @@
 
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
 import { seedData } from "@/lib/data";
-import { addDays, loadAll, resolveForDate, saveAll, todayStr } from "@/lib/snapshots";
+import { addDays, resolveForDate, todayStr } from "@/lib/snapshots";
+import { createClient } from "@/lib/supabase/client";
+import { useAuth } from "./AuthProvider";
 
 const DashboardDataContext = createContext(null);
 
 export function DashboardDataProvider({ children }) {
+  const { user } = useAuth();
+  const userId = user?.id ?? null;
+  const [supabase] = useState(() => createClient());
+
   const [snapshots, setSnapshots] = useState({});
-  // Empty until mounted so server render and first client render agree (seed data).
+  // Empty until loaded so server render and first client render agree (seed data).
   const [selectedDate, setSelectedDate] = useState("");
   const [today, setToday] = useState("");
   // +1 = moved forward in time, -1 = moved back. Drives the page transition.
@@ -26,12 +32,28 @@ export function DashboardDataProvider({ children }) {
     setSelectedDate(target);
   }, []);
 
+  // Load every saved day for this user, then land on the real present day.
   useEffect(() => {
-    setSnapshots(loadAll());
-    const t = todayStr();
-    setToday(t);
-    setSelectedDate(t); // always land on the real present day
-  }, []);
+    if (!userId) return;
+    let cancelled = false;
+    (async () => {
+      const { data, error } = await supabase.from("snapshots").select("date, data").eq("user_id", userId);
+      if (cancelled) return;
+      if (error) {
+        console.error("Failed to load snapshots", error);
+      } else {
+        const map = {};
+        for (const row of data) map[row.date] = row.data;
+        setSnapshots(map);
+      }
+      const t = todayStr();
+      setToday(t);
+      setSelectedDate(t);
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [supabase, userId]);
 
   const { data, source } = useMemo(
     () => resolveForDate(snapshots, selectedDate, seedData),
@@ -67,7 +89,7 @@ export function DashboardDataProvider({ children }) {
   // object, or a function receiving a deep copy of the currently effective data.
   const updateData = useCallback(
     (updater) => {
-      if (!selectedDate) return;
+      if (!selectedDate || !userId) return;
       setSnapshots((prev) => {
         const current = resolveForDate(prev, selectedDate, seedData).data;
         const nextDay =
@@ -75,11 +97,21 @@ export function DashboardDataProvider({ children }) {
             ? updater(JSON.parse(JSON.stringify(current)))
             : updater;
         const next = { ...prev, [selectedDate]: nextDay };
-        saveAll(next);
+
+        supabase
+          .from("snapshots")
+          .upsert(
+            { user_id: userId, date: selectedDate, data: nextDay, updated_at: new Date().toISOString() },
+            { onConflict: "user_id,date" },
+          )
+          .then(({ error }) => {
+            if (error) console.error("Failed to save snapshot", error);
+          });
+
         return next;
       });
     },
-    [selectedDate],
+    [selectedDate, userId, supabase],
   );
 
   const value = useMemo(

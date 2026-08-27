@@ -1,8 +1,9 @@
 "use client";
 
 import { useState } from "react";
-import { HomeIcon, LedgerIcon, BarsIcon, ArrowLeftIcon, ArrowRightIcon } from "./icons";
+import { HomeIcon, LedgerIcon, BarsIcon, ArrowLeftIcon, ArrowRightIcon, LogOutIcon } from "./icons";
 import { useDashboardData } from "./DashboardData";
+import { useAuth } from "./AuthProvider";
 import DatePicker from "./DatePicker";
 import { formatLong } from "@/lib/snapshots";
 
@@ -43,6 +44,7 @@ export default function TopBar() {
     goToDate,
     goToToday,
   } = useDashboardData();
+  const { signOut } = useAuth();
   const [pickerOpen, setPickerOpen] = useState(false);
 
   const dateLabel = mounted ? formatLong(selectedDate) : "…";
@@ -129,6 +131,10 @@ export default function TopBar() {
           }}
         >
           Today
+        </button>
+
+        <button type="button" style={arrowBtn} onClick={signOut} aria-label="Sign out">
+          <LogOutIcon />
         </button>
       </div>
 
