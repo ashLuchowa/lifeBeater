@@ -1,4 +1,4 @@
-import { HomeIcon, LedgerIcon, BarsIcon, SearchIcon } from "./icons";
+import { HomeIcon, LedgerIcon, BarsIcon, ArrowLeftIcon, ArrowRightIcon } from "./icons";
 
 const navBase = {
   display: "flex",
@@ -14,6 +14,7 @@ const navBase = {
 export default function TopBar() {
   return (
     <div className="topbar">
+
       <nav className="topbar-nav">
         <div style={{ ...navBase, padding: "7px 15px", background: "#14150f", color: "#fff" }}>
           <HomeIcon color="#fff" />
@@ -30,11 +31,16 @@ export default function TopBar() {
       </nav>
 
       <div className="topbar-actions">
-        <div style={{ width: 31, height: 31, borderRadius: "50%", background: "#fff", display: "flex", alignItems: "center", justifyContent: "center", flex: "none" }}>
-          <SearchIcon />
+        <ArrowLeftIcon />
+        <div style={{ padding: "8px 17px", borderRadius: 999, background: "#fff", fontSize: 13, fontWeight: 700, whiteSpace: "nowrap" }}>
+          24 August, 2026
         </div>
-        <div style={{ width: 34, height: 34, borderRadius: "50%", background: "#f0b323", border: "2.5px solid #fff", overflow: "hidden", flex: "none" }} />
+        <ArrowRightIcon />
+        <div style={{ padding: "8px 17px", borderRadius: 999, background: "#14150f", color: "#fff", fontSize: 13, fontWeight: 700, whiteSpace: "nowrap" }}>
+          Today
+        </div>
       </div>
+
     </div>
   );
 }

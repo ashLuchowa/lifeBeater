@@ -1,5 +1,4 @@
 import TopBar from "@/components/TopBar";
-import TitleRow from "@/components/TitleRow";
 import ProfileCard from "@/components/ProfileCard";
 import Milestones from "@/components/Milestones";
 import CashflowChart from "@/components/CashflowChart";
@@ -14,7 +13,6 @@ export default function Page() {
     <main className="dashboard-main">
       <div className="dashboard-panel">
         <TopBar />
-        <TitleRow />
 
         <div className="dashboard-body">
           <div className="dashboard-col">

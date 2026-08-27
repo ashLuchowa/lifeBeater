@@ -90,21 +90,6 @@ a:hover { color: #444; }
   gap: 8px;
 }
 
-.title-row {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 10px;
-  flex-wrap: wrap;
-}
-
-.title-row-controls {
-  display: flex;
-  align-items: center;
-  gap: 7px;
-  flex-wrap: wrap;
-}
-
 @media (min-width: 1101px) {
   .dashboard-panel { height: 878px; }
 }
