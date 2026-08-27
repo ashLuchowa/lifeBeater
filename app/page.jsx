@@ -1,4 +1,5 @@
 import { DashboardDataProvider } from "@/components/DashboardData";
+import ComingSoon from "@/components/ComingSoon";
 import TopBar from "@/components/TopBar";
 import ProfileCard from "@/components/ProfileCard";
 import Milestones from "@/components/Milestones";
@@ -19,21 +20,21 @@ export default function Page() {
           <div className="dashboard-body">
             <div className="dashboard-col">
               <ProfileCard />
-              <Milestones />
-              <CashflowChart />
+              <ComingSoon fill><Milestones /></ComingSoon>
+              <ComingSoon><CashflowChart /></ComingSoon>
             </div>
 
             <div className="dashboard-col">
               <AssetsLiabilities />
               <div className="health-skills-grid">
-                <HealthCard />
-                <SkillsCard />
+                <ComingSoon fill><HealthCard /></ComingSoon>
+                <ComingSoon fill><SkillsCard /></ComingSoon>
               </div>
             </div>
 
             <div className="dashboard-col dashboard-col--right">
-              <BillsCard />
-              <NotesCard />
+              <ComingSoon><BillsCard /></ComingSoon>
+              <ComingSoon fill><NotesCard /></ComingSoon>
             </div>
           </div>
         </div>
