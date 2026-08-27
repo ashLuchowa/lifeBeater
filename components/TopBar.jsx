@@ -32,7 +32,7 @@ export default function TopBar() {
 
       <div className="topbar-actions">
         <ArrowLeftIcon />
-        <div style={{ padding: "8px 17px", borderRadius: 999, background: "#fff", fontSize: 13, fontWeight: 700, whiteSpace: "nowrap" }}>
+        <div style={{ padding: "16px 24px", borderRadius: 999, background: "#fff", fontSize: 17, fontWeight: 700, color: "#000000", whiteSpace: "nowrap" }}>
           24 August, 2026
         </div>
         <ArrowRightIcon />
