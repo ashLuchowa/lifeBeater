@@ -39,14 +39,33 @@ export function DashboardDataProvider({ children }) {
     (async () => {
       const { data, error } = await supabase.from("snapshots").select("date, data").eq("user_id", userId);
       if (cancelled) return;
+
+      let map = {};
       if (error) {
         console.error("Failed to load snapshots", error);
       } else {
-        const map = {};
         for (const row of data) map[row.date] = row.data;
-        setSnapshots(map);
       }
+
+      // Guarantee today gets its own row, carrying forward whatever was true
+      // as of the last saved day — so every day you actually open the app
+      // ends up with a real snapshot for later charting, not just edited days.
       const t = todayStr();
+      if (!(t in map)) {
+        const carried = resolveForDate(map, t, seedData).data;
+        map = { ...map, [t]: carried };
+        supabase
+          .from("snapshots")
+          .upsert(
+            { user_id: userId, date: t, data: carried, updated_at: new Date().toISOString() },
+            { onConflict: "user_id,date" },
+          )
+          .then(({ error }) => {
+            if (error) console.error("Failed to seed today's snapshot", error);
+          });
+      }
+
+      setSnapshots(map);
       setToday(t);
       setSelectedDate(t);
     })();
