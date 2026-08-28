@@ -5,7 +5,7 @@ import { useDashboardData } from "./DashboardData";
 import { TitlePill } from "./ui";
 import { PencilIcon, PlusIcon } from "./icons";
 import { formatMoney, parseMoney, sumMoney } from "@/lib/money";
-import { formatShort } from "@/lib/snapshots";
+import { addDays, formatShort } from "@/lib/snapshots";
 import DatePicker from "./DatePicker";
 
 const clone = (o) => JSON.parse(JSON.stringify(o));
@@ -16,6 +16,17 @@ const clone = (o) => JSON.parse(JSON.stringify(o));
 const blankBill = () => ({ name: "", dueDate: "", due: "", amount: "" });
 
 const dueLabel = (dueDate) => (dueDate ? `Due ${formatShort(dueDate)}` : "");
+
+// Soonest first. Bills with no picked date (pre-picker rows, or ones you have
+// not dated yet) sink to the bottom, keeping their order among themselves —
+// Array#sort is stable, so equal keys never shuffle.
+const sortBills = (list) =>
+  [...list].sort((a, b) => {
+    const ad = a.dueDate || "";
+    const bd = b.dueDate || "";
+    if (!ad || !bd) return ad ? -1 : bd ? 1 : 0;
+    return ad < bd ? -1 : ad > bd ? 1 : 0;
+  });
 
 export default function BillsCard() {
   const { data, selectedDate, today, updateData } = useDashboardData();
@@ -43,7 +54,7 @@ export default function BillsCard() {
   const startEdit = () => {
     // Older snapshots may predate a field; coerce so every input stays controlled.
     setDraft({
-      bills: clone(bills).map((b) => ({
+      bills: sortBills(clone(bills)).map((b) => ({
         name: b.name ?? "",
         dueDate: b.dueDate ?? "",
         due: b.due ?? "",
@@ -69,7 +80,7 @@ export default function BillsCard() {
       }))
       .filter((b) => b.name || b.amount);
     updateData((d) => {
-      d.bills = next;
+      d.bills = sortBills(next);
       return d;
     });
     setEditing(false);
@@ -110,18 +121,24 @@ export default function BillsCard() {
           </button>
         </div>
 
-        {bills.map((b, i) => {
-          // Overdue as of the day being viewed, not the real today — every other
+        {sortBills(bills).map((b, i) => {
+          // Urgency as of the day being viewed, not the real today — every other
           // card shows what was true on its own date, so this one should too.
           // Keys are YYYY-MM-DD, so string ordering is date ordering.
-          const pastDue = b.dueDate && selectedDate && b.dueDate < selectedDate;
+          const dated = b.dueDate && selectedDate;
+          const pastDue = dated && b.dueDate < selectedDate;
+          const dueSoon = dated && !pastDue && b.dueDate <= addDays(selectedDate, 2);
+          const dueText = pastDue ? dueLabel(b.dueDate) : dueSoon ? `Soon ${formatShort(b.dueDate)}` : b.due;
+          // Amber, but darkened from the #e0a92a dot: at 9.5px on #f6faf2 the raw
+          // dot colour reads fainter than the muted text it is meant to outrank.
+          const dueColor = pastDue ? "#dd6f74" : dueSoon ? "#a8791a" : "#8a8f83";
           return (
             <div key={i} style={{ display: "flex", alignItems: "center", gap: 9, background: "#f6faf2", border: "1px solid #eaf0e2", borderRadius: 11, padding: "10px 12px" }}>
               <span style={{ width: 7, height: 7, borderRadius: "50%", background: "#e0a92a", flex: "none", display: "block" }} />
               <div style={{ flex: 1, minWidth: 0 }}>
                 <div style={{ fontSize: 11.5, fontWeight: 700, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{b.name}</div>
-                <div style={{ fontSize: 9.5, fontWeight: 600, color: pastDue ? "#dd6f74" : "#8a8f83", marginTop: 1, whiteSpace: "nowrap" }}>
-                  {pastDue ? "Past due" : b.due}
+                <div style={{ fontSize: 9.5, fontWeight: 600, color: dueColor, marginTop: 1, whiteSpace: "nowrap" }}>
+                  {dueText}
                 </div>
               </div>
               <span style={{ fontSize: 11, fontWeight: 800, whiteSpace: "nowrap", flex: "none" }}>{b.amount}</span>
