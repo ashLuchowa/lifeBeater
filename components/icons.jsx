@@ -93,6 +93,17 @@ export function LogOutIcon({ size = 14, color = "#14150f" }) {
   );
 }
 
+export function RepeatIcon({ size = 12, color = "#14150f" }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" stroke={color} {...strokeProps}>
+      <path d="M17 2l4 4-4 4" />
+      <path d="M3 11V9a4 4 0 0 1 4-4h14" />
+      <path d="M7 22l-4-4 4-4" />
+      <path d="M21 13v2a4 4 0 0 1-4 4H3" />
+    </svg>
+  );
+}
+
 export function CheckIcon({ size = 9, color = "#fff" }) {
   return (
     <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth={3.4} strokeLinecap="round" strokeLinejoin="round">

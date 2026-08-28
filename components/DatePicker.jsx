@@ -10,7 +10,7 @@ const MONTHS = [
   "July", "August", "September", "October", "November", "December",
 ];
 
-export default function DatePicker({ value, today, marked = [], onSelect, onClose }) {
+export default function DatePicker({ value, today, marked = [], allowFuture = false, onSelect, onClose }) {
   const anchor = value ? fromStr(value) : new Date();
   const [view, setView] = useState({ y: anchor.getFullYear(), m: anchor.getMonth() });
   const markedSet = new Set(marked);
@@ -30,11 +30,12 @@ export default function DatePicker({ value, today, marked = [], onSelect, onClos
 
   const cellStr = (d) => toStr(new Date(view.y, view.m, d));
 
-  // Don't let the view page into months that are entirely in the future.
+  // Don't let the view page into months that are entirely in the future,
+  // unless the caller is picking a future date (bill due dates).
   const now = today ? fromStr(today) : new Date();
   const atCurrentMonth = view.y === now.getFullYear() && view.m === now.getMonth();
   const afterCurrentMonth = view.y > now.getFullYear() || (view.y === now.getFullYear() && view.m > now.getMonth());
-  const nextMonthDisabled = atCurrentMonth || afterCurrentMonth;
+  const nextMonthDisabled = !allowFuture && (atCurrentMonth || afterCurrentMonth);
 
   return (
     <>
@@ -80,7 +81,7 @@ export default function DatePicker({ value, today, marked = [], onSelect, onClos
             const s = cellStr(d);
             const isSelected = s === value;
             const isToday = s === today;
-            const isFuture = today && s > today;
+            const isFuture = !allowFuture && today && s > today;
             return (
               <button
                 key={i}

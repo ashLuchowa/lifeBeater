@@ -39,7 +39,7 @@ export default function Page() {
                   </div>
 
                   <div className="dashboard-col dashboard-col--right">
-                    <ComingSoon><BillsCard /></ComingSoon>
+                    <BillsCard />
                     <ComingSoon fill><NotesCard /></ComingSoon>
                   </div>
                 </div>
