@@ -3,14 +3,14 @@
 import { useEffect, useState } from "react";
 import { useDashboardData } from "./DashboardData";
 import { TitlePill } from "./ui";
-import { DotsIcon, PencilIcon, PlusIcon } from "./icons";
+import { PencilIcon, PlusIcon } from "./icons";
 import { formatMoney, parseMoney, sumMoney } from "@/lib/money";
 
 const clone = (o) => JSON.parse(JSON.stringify(o));
 
 export default function AssetsLiabilities() {
   const { data, selectedDate, updateData } = useDashboardData();
-  const { ledgers, netWorth } = data;
+  const { ledgers } = data;
 
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState(null);
@@ -130,27 +130,17 @@ export default function AssetsLiabilities() {
           ))}
 
           <div style={{ borderRadius: 14, padding: 13, background: "#14150f", color: "#fff", display: "flex", flexDirection: "column", justifyContent: "space-between", gap: 10, minWidth: 0 }}>
-            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+            <div style={{ display: "flex", alignItems: "center" }}>
               <div style={{ padding: "5px 9px", borderRadius: 8, background: "rgba(255,255,255,0.12)", fontSize: 10, fontWeight: 700, whiteSpace: "nowrap" }}>
                 Net Worth
               </div>
-              <div style={{ width: 24, height: 24, borderRadius: "50%", background: "rgba(255,255,255,0.12)", display: "flex", alignItems: "center", justifyContent: "center" }}>
-                <DotsIcon size={12} color="#fff" />
-              </div>
             </div>
-            <div>
-              <div style={{ fontSize: 24, fontWeight: 800, letterSpacing: "-0.03em", whiteSpace: "nowrap" }}>{formatMoney(net)}</div>
-              <div style={{ fontSize: 10, fontWeight: 500, opacity: 0.66, marginTop: 2, whiteSpace: "nowrap" }}>{netWorth.caption}</div>
+            <div style={{ fontSize: 24, fontWeight: 800, letterSpacing: "-0.03em", whiteSpace: "nowrap", textAlign: "center" }}>
+              {formatMoney(net)}
             </div>
             <div style={{ display: "flex", height: 6, borderRadius: 999, overflow: "hidden", background: "rgba(255,255,255,0.16)" }}>
               <div style={{ width: assetShare + "%", background: "#c9e88a" }} />
               <div style={{ width: 100 - assetShare + "%", background: "#dd6f74" }} />
-            </div>
-            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 6 }}>
-              <span style={{ fontSize: 9.5, fontWeight: 600, opacity: 0.66, whiteSpace: "nowrap" }}>{netWorth.updated}</span>
-              <span style={{ padding: "4px 9px", borderRadius: 999, background: "rgba(255,255,255,0.12)", fontSize: 9.5, fontWeight: 700, whiteSpace: "nowrap" }}>
-                {netWorth.delta}
-              </span>
             </div>
           </div>
         </div>
