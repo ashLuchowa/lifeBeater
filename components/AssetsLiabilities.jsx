@@ -40,7 +40,11 @@ export default function AssetsLiabilities() {
     setDraft(null);
   };
   const save = () => {
-    const next = draft.ledgers;
+    // Recompute each ledger's stored `total` too, not just netWorth — the UI
+    // always sums `items` live so it never showed stale numbers, but the
+    // saved JSON should be internally consistent for anything (charts,
+    // exports) that reads `total` straight from the database later.
+    const next = draft.ledgers.map((l) => ({ ...l, total: formatMoney(sumMoney(l.items)) }));
     updateData((d) => {
       d.ledgers = next;
       const a = sumMoney(next[0]?.items || []);
