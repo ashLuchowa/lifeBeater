@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useDashboardData } from "./DashboardData";
 import { TitlePill } from "./ui";
 import { PencilIcon } from "./icons";
+import ComingSoon from "./ComingSoon";
 
 // "Perth, AU" -> { city: "Perth", country: "AU" }
 function splitLocation(loc = "") {
@@ -113,27 +114,30 @@ export default function ProfileCard() {
           <div style={{ fontSize: 9.5, fontWeight: 700, letterSpacing: "0.06em", textTransform: "uppercase", opacity: 0.55 }}>
             Achievements
           </div>
-          <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
-            {profile.badges.map((b) => (
-              <span
-                key={b.label}
-                style={{
-                  display: "inline-flex",
-                  alignItems: "center",
-                  gap: 5,
-                  padding: "5px 10px",
-                  borderRadius: 999,
-                  background: "rgba(255,255,255,0.1)",
-                  fontSize: 9.5,
-                  fontWeight: 700,
-                  whiteSpace: "nowrap",
-                }}
-              >
-                <span style={{ width: 6, height: 6, borderRadius: "50%", background: b.dot, display: "block" }} />
-                {b.label}
-              </span>
-            ))}
-          </div>
+          {/* Badges are placeholders until achievements are earned automatically. */}
+          <ComingSoon>
+            <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
+              {profile.badges.map((b) => (
+                <span
+                  key={b.label}
+                  style={{
+                    display: "inline-flex",
+                    alignItems: "center",
+                    gap: 5,
+                    padding: "5px 10px",
+                    borderRadius: 999,
+                    background: "rgba(255,255,255,0.1)",
+                    fontSize: 9.5,
+                    fontWeight: 700,
+                    whiteSpace: "nowrap",
+                  }}
+                >
+                  <span style={{ width: 6, height: 6, borderRadius: "50%", background: b.dot, display: "block" }} />
+                  {b.label}
+                </span>
+              ))}
+            </div>
+          </ComingSoon>
         </div>
       </div>
 
