@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { useDashboardData } from "./DashboardData";
 import { TitlePill } from "./ui";
 import { PencilIcon, PlusIcon } from "./icons";
-import { formatMoney, parseMoney, sumMoney } from "@/lib/money";
+import { formatMoney, parseMoney } from "@/lib/money";
 import { addDays, formatShort } from "@/lib/snapshots";
 import DatePicker from "./DatePicker";
 
@@ -154,7 +154,6 @@ export default function BillsCard() {
       {editing && draft && (
         <Editor
           draft={draft}
-          selectedDate={selectedDate}
           today={today}
           onSetBill={setBill}
           onAddBill={addBill}
@@ -167,8 +166,7 @@ export default function BillsCard() {
   );
 }
 
-function Editor({ draft, selectedDate, today, onSetBill, onAddBill, onRemoveBill, onCancel, onSave }) {
-  const total = sumMoney(draft.bills.map((b) => ({ value: b.amount })));
+function Editor({ draft, today, onSetBill, onAddBill, onRemoveBill, onCancel, onSave }) {
   // Index of the row whose calendar is open, or null. Only one at a time.
   const [pickerFor, setPickerFor] = useState(null);
 
@@ -261,14 +259,6 @@ function Editor({ draft, selectedDate, today, onSetBill, onAddBill, onRemoveBill
             <PlusIcon size={12} />
             Add bill
           </button>
-        </div>
-
-        <div style={{ borderRadius: 14, padding: 13, background: "#14150f", color: "#fff", display: "flex", flexDirection: "column", gap: 8 }}>
-          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 6 }}>
-            <div style={{ padding: "5px 9px", borderRadius: 8, background: "rgba(255,255,255,0.12)", fontSize: 10, fontWeight: 700 }}>Total Due</div>
-            <div style={{ fontSize: 20, fontWeight: 800, letterSpacing: "-0.03em" }}>{formatMoney(total)}</div>
-          </div>
-          <div style={{ fontSize: 9.5, fontWeight: 500, opacity: 0.66 }}>Totals update as you edit · saved to {selectedDate}</div>
         </div>
       </div>
     </div>
