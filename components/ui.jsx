@@ -38,6 +38,20 @@ export function DotsButton({ size = 26 }) {
   );
 }
 
+// Round icon button used by the top bar controls (day nav, year nav, sign out).
+export const navArrowBtn = {
+  display: "flex",
+  alignItems: "center",
+  justifyContent: "center",
+  width: 34,
+  height: 34,
+  borderRadius: "50%",
+  border: "0px solid #14150f",
+  background: "transparent",
+  cursor: "pointer",
+  flex: "none",
+};
+
 export function Card({ children, style }) {
   return (
     <div

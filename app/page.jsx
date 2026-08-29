@@ -4,6 +4,7 @@ import { DashboardDataProvider } from "@/components/DashboardData";
 import DayTransition from "@/components/DayTransition";
 import ComingSoon from "@/components/ComingSoon";
 import TopBar from "@/components/TopBar";
+import DayNav from "@/components/DayNav";
 import ProfileCard from "@/components/ProfileCard";
 import Milestones from "@/components/Milestones";
 import CashflowChart from "@/components/CashflowChart";
@@ -20,7 +21,9 @@ export default function Page() {
         <main className="dashboard-main">
           <DashboardDataProvider>
             <div className="dashboard-panel">
-              <TopBar />
+              <TopBar>
+                <DayNav />
+              </TopBar>
 
               <DayTransition>
                 <div className="dashboard-body">

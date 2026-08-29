@@ -1,11 +1,10 @@
 "use client";
 
-import { useState } from "react";
-import { HomeIcon, LedgerIcon, BarsIcon, ArrowLeftIcon, ArrowRightIcon, LogOutIcon } from "./icons";
-import { useDashboardData } from "./DashboardData";
+import Link from "next/link";
+import { usePathname } from "next/navigation";
+import { HomeIcon, LedgerIcon, BarsIcon, LogOutIcon } from "./icons";
 import { useAuth } from "./AuthProvider";
-import DatePicker from "./DatePicker";
-import { formatLong } from "@/lib/snapshots";
+import { navArrowBtn } from "./ui";
 
 const navBase = {
   display: "flex",
@@ -18,122 +17,40 @@ const navBase = {
   whiteSpace: "nowrap",
 };
 
-const arrowBtn = {
-  display: "flex",
-  alignItems: "center",
-  justifyContent: "center",
-  width: 34,
-  height: 34,
-  borderRadius: "50%",
-  border: "0px solid #14150f",
-  background: "transparent",
-  cursor: "pointer",
-  flex: "none",
-};
+const navActive = { ...navBase, padding: "7px 15px", background: "#14150f", color: "#fff" };
 
-export default function TopBar() {
-  const {
-    selectedDate,
-    mounted,
-    isToday,
-    canGoNext,
-    snapshotDates,
-    today,
-    goToPrevDay,
-    goToNextDay,
-    goToDate,
-    goToToday,
-  } = useDashboardData();
+// The bar knows about auth and which nav link is active — nothing else. Each
+// page passes its own controls as `children`: the dashboard passes <DayNav />,
+// which is snapshot-backed, and the ledger passes <YearNav />, which is not.
+// That keeps the DashboardDataProvider requirement with the pages that have one.
+export default function TopBar({ children }) {
   const { signOut } = useAuth();
-  const [pickerOpen, setPickerOpen] = useState(false);
+  const pathname = usePathname();
 
-  const dateLabel = mounted ? formatLong(selectedDate) : "…";
+  const onLedger = pathname === "/income-expense";
 
   return (
     <div className="topbar">
 
       <nav className="topbar-nav">
-        <div style={{ ...navBase, padding: "7px 15px", background: "#14150f", color: "#fff" }}>
-          <HomeIcon color="#fff" />
+        <Link href="/" style={onLedger ? navBase : navActive}>
+          <HomeIcon color={onLedger ? "#14150f" : "#fff"} />
           Home
-        </div>
+        </Link>
         <div style={navBase}>
           <LedgerIcon />
           Assets &amp; Liabilities
         </div>
-        <div style={navBase}>
-          <BarsIcon />
+        <Link href="/income-expense" style={onLedger ? navActive : navBase}>
+          <BarsIcon color={onLedger ? "#fff" : "#14150f"} />
           Income / Expense
-        </div>
+        </Link>
       </nav>
 
       <div className="topbar-actions">
-        <button type="button" style={arrowBtn} onClick={goToPrevDay} aria-label="Previous day">
-          <ArrowLeftIcon />
-        </button>
+        {children}
 
-        <div style={{ position: "relative" }}>
-          <button
-            type="button"
-            onClick={() => setPickerOpen((o) => !o)}
-            style={{
-              padding: "16px 24px",
-              borderRadius: 999,
-              background: "#fff",
-              border: "0px solid #14150f",
-              fontSize: 17,
-              fontWeight: 700,
-              color: "#000000",
-              whiteSpace: "nowrap",
-              cursor: "pointer",
-            }}
-          >
-            {dateLabel}
-          </button>
-          {pickerOpen && mounted && (
-            <DatePicker
-              value={selectedDate}
-              today={today}
-              marked={snapshotDates}
-              onSelect={goToDate}
-              onClose={() => setPickerOpen(false)}
-            />
-          )}
-        </div>
-
-        <button
-          type="button"
-          style={{
-            ...arrowBtn,
-            cursor: canGoNext ? "pointer" : "not-allowed",
-            opacity: canGoNext ? 1 : 0.3,
-          }}
-          onClick={goToNextDay}
-          disabled={!canGoNext}
-          aria-label="Next day"
-        >
-          <ArrowRightIcon />
-        </button>
-
-        <button
-          type="button"
-          onClick={goToToday}
-          style={{
-            padding: "8px 17px",
-            borderRadius: 999,
-            background: isToday ? "#14150f" : "transparent",
-            color: isToday ? "#fff" : "#14150f",
-            border: "2px solid #14150f",
-            fontSize: 13,
-            fontWeight: 700,
-            whiteSpace: "nowrap",
-            cursor: "pointer",
-          }}
-        >
-          Today
-        </button>
-
-        <button type="button" style={arrowBtn} onClick={signOut} aria-label="Sign out">
+        <button type="button" style={navArrowBtn} onClick={signOut} aria-label="Sign out">
           <LogOutIcon />
         </button>
       </div>
