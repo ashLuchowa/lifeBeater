@@ -12,6 +12,7 @@ import {
   signedAmount,
   share,
   isOtherIncome,
+  weekRangeLabel,
 } from "@/lib/ledger";
 
 // Everything below is derived from the five editable groups — nothing here is
@@ -192,6 +193,7 @@ export default function LedgerBoard({ fy }) {
                     entries={row.entries}
                     family="cool"
                     pct={share(sum(row.values), incomeTotal)}
+                    cellTitle={(month) => weekRangeLabel(fy, month, ri)}
                     onSetValue={(month, value) => setIncomeValue(si, ri, month, value)}
                   />
                 ))}

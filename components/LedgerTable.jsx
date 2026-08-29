@@ -93,7 +93,7 @@ const parseAmount = (v) => {
 
 // A number cell you can type into. Shows the formatted value at rest and the
 // raw number while focused, so you are never editing an em dash or a comma.
-function CellInput({ value, onCommit, style }) {
+function CellInput({ value, onCommit, style, title }) {
   const [draft, setDraft] = useState(null);
   const draftRef = useRef(null);
 
@@ -106,6 +106,7 @@ function CellInput({ value, onCommit, style }) {
     <input
       className="ledger-cell ledger-cell--input"
       style={style}
+      title={title}
       inputMode="decimal"
       value={draft ?? cellAmount(value)}
       onFocus={(e) => {
@@ -131,7 +132,7 @@ function CellInput({ value, onCommit, style }) {
 // Values and label are independently editable. Expense rows get both plus a
 // delete; income week rows get `onSetValue` only, so Week 1–4 stay fixed.
 // Derived rows (totals, Fixed + Variable, …) get none and render as plain text.
-export function LedgerRow({ label, values, entries, family, pct, emphasis, onSetValue, onOpenCell, onSetLabel, onRemove }) {
+export function LedgerRow({ label, values, entries, family, pct, emphasis, cellTitle, onSetValue, onOpenCell, onSetLabel, onRemove }) {
   const max = Math.max(1, ...values);
   const total = sum(values);
   const dark = emphasis === "dark";
@@ -182,7 +183,15 @@ export function LedgerRow({ label, values, entries, family, pct, emphasis, onSet
         const detailed = entries?.[i]?.length > 0;
         // onSetValue = type it here (fixed costs); onOpenCell = break it down.
         if (onSetValue) {
-          return <CellInput key={i} value={v} style={style} onCommit={(n) => onSetValue(i, n)} />;
+          return (
+            <CellInput
+              key={i}
+              value={v}
+              style={style}
+              title={cellTitle?.(i)}
+              onCommit={(n) => onSetValue(i, n)}
+            />
+          );
         }
         return editableValues ? (
           <button
