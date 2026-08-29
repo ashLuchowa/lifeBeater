@@ -1,5 +1,6 @@
 "use client";
 
+import { Fragment } from "react";
 import { LedgerHead, LedgerRow, LedgerSection, LedgerScroller, LedgerGap, LedgerAddRow } from "./LedgerTable";
 import { useLedger } from "./LedgerData";
 import {
@@ -15,18 +16,21 @@ import {
 // stored. Edit a cell and the totals, shares, summary cards and monthly net all
 // fall out of the same numbers.
 export default function LedgerBoard({ fy }) {
-  const { ledger, loading, saving, error, setValue, setLabel, addRow, removeRow } = useLedger(fy);
-  const { fixedCost, variableCost, mainIncome, sideIncome, otherIncome } = ledger;
+  const {
+    ledger, loading, saving, error,
+    setValue, setLabel, addRow, removeRow,
+    setIncomeValue, setSourceLabel, addSource, removeSource,
+  } = useLedger(fy);
+  const { fixedCost, variableCost, incomeSources } = ledger;
 
   const fixedCols = columnTotals(fixedCost);
   const variableCols = columnTotals(variableCost);
   const expenseCols = months.map((_, i) => fixedCols[i] + variableCols[i]);
   const expenseTotal = sum(expenseCols);
 
-  const mainCols = columnTotals(mainIncome);
-  const sideCols = columnTotals(sideIncome);
-  const otherCols = columnTotals(otherIncome);
-  const incomeCols = months.map((_, i) => mainCols[i] + sideCols[i] + otherCols[i]);
+  // Each source totals its own four weeks; income is the sum across sources.
+  const sourceCols = incomeSources.map((src) => columnTotals(src.rows));
+  const incomeCols = months.map((_, i) => sum(sourceCols.map((c) => c[i])));
   const incomeTotal = sum(incomeCols);
 
   const netCols = months.map((_, i) => incomeCols[i] - expenseCols[i]);
@@ -56,9 +60,6 @@ export default function LedgerBoard({ fy }) {
 
   const fixedRows = fixedCost.map(editable("fixedCost", "warm", expenseTotal));
   const variableRows = variableCost.map(editable("variableCost", "warm", expenseTotal));
-  const mainRows = mainIncome.map(editable("mainIncome", "cool", incomeTotal));
-  const sideRows = sideIncome.map(editable("sideIncome", "cool", incomeTotal));
-  const otherRows = otherIncome.map(editable("otherIncome", "cool", incomeTotal));
 
   return (
     <>
@@ -108,23 +109,39 @@ export default function LedgerBoard({ fy }) {
         </header>
 
         <LedgerScroller>
-          <LedgerHead label="Main income" />
-          {mainRows.map((r) => <LedgerRow key={r.key} {...r} />)}
-          <LedgerAddRow onClick={() => addRow("mainIncome")}>Add main income</LedgerAddRow>
-          <LedgerRow label="Main Total" values={mainCols} family="cool" pct={share(sum(mainCols), incomeTotal)} emphasis="strong" />
+          <LedgerHead label="Source" />
 
-          <LedgerGap />
-          <LedgerSection label="Side income (gross)" />
-          {sideRows.map((r) => <LedgerRow key={r.key} {...r} />)}
-          <LedgerAddRow onClick={() => addRow("sideIncome")}>Add side income</LedgerAddRow>
-          <LedgerRow label="Side Total" values={sideCols} family="cool" pct={share(sum(sideCols), incomeTotal)} emphasis="strong" />
+          {incomeSources.map((src, si) => (
+            <Fragment key={si}>
+              {si > 0 && <LedgerGap />}
+              <LedgerSection
+                label={src.label}
+                placeholder="Income source"
+                onSetLabel={(label) => setSourceLabel(si, label)}
+                onRemove={incomeSources.length > 1 ? () => removeSource(si) : undefined}
+              />
+              {src.rows.map((row, ri) => (
+                <LedgerRow
+                  key={ri}
+                  label={row.label}
+                  values={row.values}
+                  family="cool"
+                  pct={share(sum(row.values), incomeTotal)}
+                  onSetValue={(month, value) => setIncomeValue(si, ri, month, value)}
+                />
+              ))}
+              <LedgerRow
+                label={(src.label || "Source") + " Total"}
+                values={sourceCols[si]}
+                family="cool"
+                pct={share(sum(sourceCols[si]), incomeTotal)}
+                emphasis="strong"
+              />
+            </Fragment>
+          ))}
 
-          <LedgerGap />
-          <LedgerSection label="Other income (net)" />
-          {otherRows.map((r) => <LedgerRow key={r.key} {...r} />)}
-          <LedgerAddRow onClick={() => addRow("otherIncome")}>Add other income</LedgerAddRow>
-          <LedgerRow label="Other Total" values={otherCols} family="cool" pct={share(sum(otherCols), incomeTotal)} emphasis="strong" />
-          <LedgerRow label="Main + Side + Other" values={incomeCols} family="cool" pct="100%" emphasis="dark" />
+          <LedgerAddRow onClick={addSource}>Add income source</LedgerAddRow>
+          <LedgerRow label="All Income" values={incomeCols} family="cool" pct="100%" emphasis="dark" />
         </LedgerScroller>
       </section>
 

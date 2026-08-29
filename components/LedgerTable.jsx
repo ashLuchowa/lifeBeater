@@ -35,10 +35,28 @@ export function LedgerHead({ label }) {
   );
 }
 
-export function LedgerSection({ label }) {
+// A band across the grid. With `onSetLabel` it becomes an income source header:
+// renameable, and deletable when there is more than one source.
+export function LedgerSection({ label, placeholder, onSetLabel, onRemove }) {
   return (
-    <div className="ledger-row">
-      <div className="ledger-cell ledger-cell--label ledger-section">{label}</div>
+    <div className={onSetLabel ? "ledger-row ledger-row--editable" : "ledger-row"}>
+      <div className="ledger-cell ledger-cell--label ledger-section">
+        {onSetLabel ? (
+          <input
+            className="ledger-label-input ledger-label-input--section"
+            value={label}
+            placeholder={placeholder}
+            onChange={(e) => onSetLabel(e.target.value)}
+          />
+        ) : (
+          label
+        )}
+        {onRemove && (
+          <button type="button" className="ledger-row-del" onClick={onRemove} aria-label={"Delete " + (label || "source")}>
+            &times;
+          </button>
+        )}
+      </div>
     </div>
   );
 }
@@ -80,9 +98,9 @@ function CellInput({ value, onCommit, style }) {
   );
 }
 
-// `onSetValue` / `onSetLabel` / `onRemove` are what make a row editable. Derived
-// rows (section totals, Fixed + Variable, and so on) pass none and render exactly
-// as before — they are computed, so there is nothing to type into.
+// Values and label are independently editable. Expense rows get both plus a
+// delete; income week rows get `onSetValue` only, so Week 1–4 stay fixed.
+// Derived rows (totals, Fixed + Variable, …) get none and render as plain text.
 export function LedgerRow({ label, values, family, pct, emphasis, onSetValue, onSetLabel, onRemove }) {
   const max = Math.max(1, ...values);
   const total = sum(values);
@@ -90,40 +108,39 @@ export function LedgerRow({ label, values, family, pct, emphasis, onSetValue, on
   const strong = emphasis === "strong";
   const accent = family === "warm" ? "#fbd9da" : "#dff1e4";
   const totalTint = family === "warm" ? "#fbecc4" : "#dff1e4";
-  const editable = Boolean(onSetValue);
+  const editableValues = Boolean(onSetValue);
 
   const base = {
     borderRadius: emphasis ? 10 : 9,
     fontWeight: emphasis ? 800 : 600,
   };
 
-  const labelStyle = {
-    ...base,
-    background: dark ? "#14150f" : strong ? accent : "#f6faf2",
-    color: dark ? "#fff" : "#14150f",
-  };
-
   return (
-    <div className={editable ? "ledger-row ledger-row--editable" : "ledger-row"}>
-      {editable ? (
-        <div className="ledger-cell ledger-cell--label" style={labelStyle}>
+    <div className={editableValues ? "ledger-row ledger-row--editable" : "ledger-row"}>
+      <div
+        className="ledger-cell ledger-cell--label"
+        style={{
+          ...base,
+          background: dark ? "#14150f" : strong ? accent : "#f6faf2",
+          color: dark ? "#fff" : "#14150f",
+        }}
+      >
+        {onSetLabel ? (
           <input
             className="ledger-label-input"
             value={label}
             placeholder="Item name"
             onChange={(e) => onSetLabel(e.target.value)}
           />
-          {onRemove && (
-            <button type="button" className="ledger-row-del" onClick={onRemove} aria-label={`Delete ${label || "row"}`}>
-              &times;
-            </button>
-          )}
-        </div>
-      ) : (
-        <div className="ledger-cell ledger-cell--label" style={labelStyle}>
-          {label}
-        </div>
-      )}
+        ) : (
+          label
+        )}
+        {onRemove && (
+          <button type="button" className="ledger-row-del" onClick={onRemove} aria-label={"Delete " + (label || "row")}>
+            &times;
+          </button>
+        )}
+      </div>
 
       {values.map((v, i) => {
         const shade = cellShade(v, max, family);
@@ -132,7 +149,7 @@ export function LedgerRow({ label, values, family, pct, emphasis, onSetValue, on
           background: dark ? "#14150f" : shade.background,
           color: dark ? "#fff" : shade.color,
         };
-        return editable ? (
+        return editableValues ? (
           <CellInput key={i} value={v} style={style} onCommit={(n) => onSetValue(i, n)} />
         ) : (
           <div key={i} className="ledger-cell" style={style}>
@@ -163,7 +180,7 @@ export function LedgerRow({ label, values, family, pct, emphasis, onSetValue, on
   );
 }
 
-// Full-width dashed button that sits under a group's item rows.
+// Full-width dashed button that sits under a group's rows.
 export function LedgerAddRow({ onClick, children }) {
   return (
     <div className="ledger-row">

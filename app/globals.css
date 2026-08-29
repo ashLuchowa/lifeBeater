@@ -387,6 +387,10 @@ a:hover { color: #444; }
 }
 .ledger-label-input:hover { border-color: rgba(20, 21, 15, 0.18); }
 .ledger-label-input:focus { border-color: #14150f; background: #fff; }
+.ledger-label-input::placeholder { color: #b3bba9; font-weight: 600; }
+
+/* Income source headers sit in the section band and carry its weight. */
+.ledger-label-input--section { font-weight: 700; }
 
 .ledger-row-del {
   width: 17px;
@@ -408,6 +412,7 @@ a:hover { color: #444; }
 
 .ledger-add-row {
   grid-column: 1 / -1;
+  margin: 5px 0;
   padding: 6px 10px;
   border-radius: 9px;
   border: 1px dashed rgba(20, 21, 15, 0.28);
@@ -418,6 +423,8 @@ a:hover { color: #444; }
   color: #5c6156;
   text-align: left;
   cursor: pointer;
+  /* Breathing room before the total row that follows. */
+  margin-bottom: 8px;
 }
 .ledger-add-row:hover { background: #f6faf2; border-color: rgba(20, 21, 15, 0.45); }
 

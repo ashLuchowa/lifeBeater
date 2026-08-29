@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { useAuth } from "./AuthProvider";
-import { GROUPS, blankRow, ledgerFor, normaliseLedger } from "@/lib/ledger";
+import { EXPENSE_GROUPS, blankRow, blankSource, normaliseLedger } from "@/lib/ledger";
 
 // One ledger per user per financial year, in the `ledgers` table (see
 // supabase/ledgers.sql). No day dimension and no snapshot inheritance — a year
@@ -13,7 +13,7 @@ export function useLedger(fy) {
   const userId = user?.id ?? null;
   const [supabase] = useState(() => createClient());
 
-  const [ledger, setLedger] = useState(() => ledgerFor(fy));
+  const [ledger, setLedger] = useState(() => normaliseLedger(null, fy));
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState(null);
@@ -81,6 +81,7 @@ export function useLedger(fy) {
 
   const actions = useMemo(
     () => ({
+      // Expenses: item rows inside a fixed group.
       setValue: (group, row, month, value) =>
         edit((d) => {
           d[group][row].values[month] = value;
@@ -101,6 +102,28 @@ export function useLedger(fy) {
           d[group].splice(row, 1);
           return d;
         }),
+
+      // Income: sources you add and rename; their four week rows are fixed.
+      setIncomeValue: (source, row, month, value) =>
+        edit((d) => {
+          d.incomeSources[source].rows[row].values[month] = value;
+          return d;
+        }),
+      setSourceLabel: (source, label) =>
+        edit((d) => {
+          d.incomeSources[source].label = label;
+          return d;
+        }),
+      addSource: () =>
+        edit((d) => {
+          d.incomeSources.push(blankSource());
+          return d;
+        }),
+      removeSource: (source) =>
+        edit((d) => {
+          d.incomeSources.splice(source, 1);
+          return d;
+        }),
     }),
     [edit],
   );
@@ -108,4 +131,4 @@ export function useLedger(fy) {
   return { ledger, loading, saving, error, ...actions };
 }
 
-export { GROUPS };
+export { EXPENSE_GROUPS };
