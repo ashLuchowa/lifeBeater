@@ -3,7 +3,7 @@ import AppShell from "@/components/AppShell";
 import TopBar from "@/components/TopBar";
 import YearNav from "@/components/YearNav";
 import LedgerBoard from "@/components/LedgerBoard";
-import { isFinancialYear, currentFinancialYear } from "@/lib/ledger";
+import { isFinancialYearInRange, currentFinancialYear } from "@/lib/ledger";
 
 export const metadata = { title: "Income / Expense" };
 
@@ -12,8 +12,10 @@ export default function IncomeExpensePage({ searchParams }) {
   // the This FY button and the year window, and computing it separately in the
   // browser could disagree with the server across a 1 July boundary.
   const currentFy = currentFinancialYear();
+  // Anything malformed, or outside the range the nav offers, falls back to the
+  // current year rather than stranding you somewhere the arrows cannot leave.
   const requested = searchParams?.fy;
-  const fy = isFinancialYear(requested) ? requested : currentFy;
+  const fy = isFinancialYearInRange(requested, currentFy) ? requested : currentFy;
 
   return (
     <AuthProvider>

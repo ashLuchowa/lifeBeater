@@ -53,7 +53,7 @@ export default function YearNav({ fy, currentFy }) {
   const next = shiftFinancialYear(fy, 1);
   const prev = shiftFinancialYear(fy, -1);
   const canGoNext = next <= maxFinancialYear(currentFy);
-  const canGoPrev = prev >= minFinancialYear(currentFy);
+  const canGoPrev = prev >= minFinancialYear();
 
   // Which years already have figures — fetched once, the first time you look.
   useEffect(() => {
