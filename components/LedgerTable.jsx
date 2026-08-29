@@ -15,11 +15,6 @@ function cellShade(value, max, family) {
   return { background: tint(family, 0.12 + ratio * 0.72), color: "#14150f" };
 }
 
-const parseAmount = (v) => {
-  const n = parseFloat(String(v).replace(/[^0-9.-]/g, ""));
-  return Number.isFinite(n) ? n : 0;
-};
-
 export function LedgerHead({ label }) {
   return (
     <div className="ledger-row">
@@ -91,6 +86,11 @@ function LabelInput({ value, placeholder, className, onCommit }) {
   );
 }
 
+const parseAmount = (v) => {
+  const n = parseFloat(String(v).replace(/[^0-9.-]/g, ""));
+  return Number.isFinite(n) ? n : 0;
+};
+
 // A number cell you can type into. Shows the formatted value at rest and the
 // raw number while focused, so you are never editing an em dash or a comma.
 function CellInput({ value, onCommit, style }) {
@@ -120,7 +120,7 @@ function CellInput({ value, onCommit, style }) {
       onKeyDown={(e) => {
         if (e.key === "Enter") e.currentTarget.blur();
         if (e.key === "Escape") {
-          set(null); // discard, then let blur find nothing to commit
+          set(null);
           e.currentTarget.blur();
         }
       }}
@@ -131,14 +131,14 @@ function CellInput({ value, onCommit, style }) {
 // Values and label are independently editable. Expense rows get both plus a
 // delete; income week rows get `onSetValue` only, so Week 1–4 stay fixed.
 // Derived rows (totals, Fixed + Variable, …) get none and render as plain text.
-export function LedgerRow({ label, values, family, pct, emphasis, onSetValue, onSetLabel, onRemove }) {
+export function LedgerRow({ label, values, entries, family, pct, emphasis, onSetValue, onOpenCell, onSetLabel, onRemove }) {
   const max = Math.max(1, ...values);
   const total = sum(values);
   const dark = emphasis === "dark";
   const strong = emphasis === "strong";
   const accent = family === "warm" ? "#fbd9da" : "#dff1e4";
   const totalTint = family === "warm" ? "#fbecc4" : "#dff1e4";
-  const editableValues = Boolean(onSetValue);
+  const editableValues = Boolean(onOpenCell || onSetValue);
 
   const base = {
     borderRadius: emphasis ? 10 : 9,
@@ -179,8 +179,23 @@ export function LedgerRow({ label, values, family, pct, emphasis, onSetValue, on
           background: dark ? "#14150f" : shade.background,
           color: dark ? "#fff" : shade.color,
         };
+        const detailed = entries?.[i]?.length > 0;
+        // onSetValue = type it here (fixed costs); onOpenCell = break it down.
+        if (onSetValue) {
+          return <CellInput key={i} value={v} style={style} onCommit={(n) => onSetValue(i, n)} />;
+        }
         return editableValues ? (
-          <CellInput key={i} value={v} style={style} onCommit={(n) => onSetValue(i, n)} />
+          <button
+            key={i}
+            type="button"
+            className="ledger-cell ledger-cell--btn"
+            style={style}
+            onClick={() => onOpenCell(i)}
+            title={detailed ? entries[i].length + " line(s) — click to edit" : "Click to edit"}
+          >
+            {cellAmount(v)}
+            {detailed && <span className="ledger-cell-mark" aria-hidden="true" />}
+          </button>
         ) : (
           <div key={i} className="ledger-cell" style={style}>
             {cellAmount(v)}

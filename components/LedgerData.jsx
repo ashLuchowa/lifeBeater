@@ -1,9 +1,29 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { useAuth } from "./AuthProvider";
-import { EXPENSE_GROUPS, blankRow, blankSource, carryForward, normaliseLedger } from "@/lib/ledger";
+import {
+  EXPENSE_GROUPS,
+  blankEntry,
+  blankRow,
+  blankSource,
+  carryForward,
+  entriesTotal,
+  normaliseLedger,
+} from "@/lib/ledger";
+
+// Cells are addressed the same way whether they live in an expense group or an
+// income source, so the breakdown actions below need only one code path.
+// loc is { group, row } for expenses, { source, row } for income.
+const rowAt = (d, loc) =>
+  loc.source !== undefined ? d.incomeSources[loc.source].rows[loc.row] : d[loc.group][loc.row];
+
+// A month showing a breakdown is always the sum of its lines. Deleting the last
+// line leaves the figure standing — it just becomes typeable again.
+const syncCell = (row, month) => {
+  if (row.entries[month].length) row.values[month] = entriesTotal(row.entries[month]);
+};
 
 // How many steps back you can go. Each entry is a whole ledger document, which
 // is a few KB, so this is cheap.
@@ -18,6 +38,20 @@ export function useLedger(fy) {
   const [supabase] = useState(() => createClient());
 
   const [ledger, setLedger] = useState(() => normaliseLedger(null, fy));
+
+  // Mirrors the ledger state, but updated synchronously rather than at the next
+  // render. Two edits can land in one event batch — clicking "+ Add line" or
+  // "Done" while a field is focused fires that field's blur and the click
+  // together — and reading the state captured by this render would leave the
+  // second edit built on a stale copy, silently discarding the first.
+  const ledgerRef = useRef(null);
+  if (ledgerRef.current === null) ledgerRef.current = ledger;
+
+  const applyLedger = useCallback((next) => {
+    ledgerRef.current = next;
+    setLedger(next);
+  }, []);
+
   const [past, setPast] = useState([]);
   const [future, setFuture] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -86,7 +120,7 @@ export function useLedger(fy) {
 
       // A fresh load is not an edit: it starts a new history, it does not
       // become a step you can undo back past.
-      setLedger(normaliseLedger(next, fy));
+      applyLedger(normaliseLedger(next, fy));
       setPast([]);
       setFuture([]);
       setLoading(false);
@@ -94,42 +128,43 @@ export function useLedger(fy) {
     return () => {
       cancelled = true;
     };
-  }, [supabase, userId, fy]);
+  }, [supabase, userId, fy, applyLedger]);
 
   // Optimistic: the grid updates immediately, the write follows. Every edit
   // sends the whole ledger, the way snapshots do — these are small documents.
   const commit = useCallback(
     (next) => {
-      setPast((p) => [...p, ledger].slice(-HISTORY_LIMIT));
+      setPast((p) => [...p, ledgerRef.current].slice(-HISTORY_LIMIT));
       setFuture([]);
-      setLedger(next);
+      applyLedger(next);
       persist(next);
     },
-    [ledger, persist],
+    [applyLedger, persist],
   );
 
+  // Always builds on the newest ledger, not the one this render captured.
   const edit = useCallback(
-    (fn) => commit(fn(JSON.parse(JSON.stringify(ledger)))),
-    [ledger, commit],
+    (fn) => commit(fn(JSON.parse(JSON.stringify(ledgerRef.current)))),
+    [commit],
   );
 
   const undo = useCallback(() => {
     if (!past.length) return;
     const restored = past[past.length - 1];
     setPast((p) => p.slice(0, -1));
-    setFuture((f) => [ledger, ...f].slice(0, HISTORY_LIMIT));
-    setLedger(restored);
+    setFuture((f) => [ledgerRef.current, ...f].slice(0, HISTORY_LIMIT));
+    applyLedger(restored);
     persist(restored);
-  }, [past, ledger, persist]);
+  }, [past, applyLedger, persist]);
 
   const redo = useCallback(() => {
     if (!future.length) return;
     const restored = future[0];
     setFuture((f) => f.slice(1));
-    setPast((p) => [...p, ledger].slice(-HISTORY_LIMIT));
-    setLedger(restored);
+    setPast((p) => [...p, ledgerRef.current].slice(-HISTORY_LIMIT));
+    applyLedger(restored);
     persist(restored);
-  }, [future, ledger, persist]);
+  }, [future, applyLedger, persist]);
 
   const actions = useMemo(
     () => ({
@@ -174,6 +209,34 @@ export function useLedger(fy) {
       removeSource: (source) =>
         edit((d) => {
           d.incomeSources.splice(source, 1);
+          return d;
+        }),
+
+      // Per-cell breakdown, shared by expense and income cells via `loc`.
+      setCellTotal: (loc, month, value) =>
+        edit((d) => {
+          rowAt(d, loc).values[month] = value;
+          return d;
+        }),
+      addEntry: (loc, month) =>
+        edit((d) => {
+          const row = rowAt(d, loc);
+          row.entries[month].push(blankEntry());
+          syncCell(row, month);
+          return d;
+        }),
+      setEntry: (loc, month, index, field, value) =>
+        edit((d) => {
+          const row = rowAt(d, loc);
+          row.entries[month][index][field] = value;
+          syncCell(row, month);
+          return d;
+        }),
+      removeEntry: (loc, month, index) =>
+        edit((d) => {
+          const row = rowAt(d, loc);
+          row.entries[month].splice(index, 1);
+          syncCell(row, month);
           return d;
         }),
     }),

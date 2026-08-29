@@ -380,6 +380,35 @@ a:hover { color: #444; }
 
 .ledger-gap { height: 9px; }
 
+/* --- Editing: a clickable cell has to sit exactly where the static cell did,
+   so it inherits .ledger-cell and only resets the button chrome. Clicking it
+   opens the breakdown modal. --- */
+.ledger-cell--btn {
+  position: relative;
+  border: 1px solid transparent;
+  font-family: inherit;
+  /* No font-size here: this rule sits after .ledger-cell, so declaring it would
+     override the grid's 10.5px and the cells would render at the inherited size. */
+  font-weight: inherit;
+  width: 100%;
+  min-width: 0;
+  text-align: right;
+  cursor: pointer;
+}
+.ledger-cell--btn:hover { border-color: rgba(20, 21, 15, 0.28); }
+.ledger-cell--btn:focus-visible { border-color: #14150f; outline: none; }
+
+/* Marks a month that has lines behind it, without spending any width. */
+.ledger-cell-mark {
+  position: absolute;
+  top: 3px;
+  left: 4px;
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: rgba(20, 21, 15, 0.42);
+}
+
 /* --- Editing: a cell you can type into has to sit exactly where the static
    cell did, so it inherits .ledger-cell and only resets the input chrome. --- */
 .ledger-cell--input {

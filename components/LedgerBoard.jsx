@@ -1,8 +1,9 @@
 "use client";
 
-import { Fragment, useEffect } from "react";
+import { Fragment, useEffect, useState } from "react";
 import { LedgerHead, LedgerRow, LedgerSection, LedgerScroller, LedgerGap, LedgerAddRow } from "./LedgerTable";
 import { useLedger } from "./LedgerData";
+import CellEditor from "./CellEditor";
 import {
   months,
   columnTotals,
@@ -21,7 +22,13 @@ export default function LedgerBoard({ fy }) {
     setValue, setLabel, addRow, removeRow,
     setIncomeValue, setSourceLabel, addSource, removeSource,
     undo, redo, canUndo, canRedo,
+    setCellTotal, addEntry, setEntry, removeEntry,
   } = useLedger(fy);
+
+  // Which cell is open in the breakdown modal: { loc, month, label } or null.
+  // Only the address is held — the row itself is read live out of the ledger on
+  // every render, so the modal reflects each edit instead of a stale snapshot.
+  const [openCell, setOpenCell] = useState(null);
 
   // Ctrl/Cmd+Z and Ctrl/Cmd+Shift+Z, but only outside a field — inside one the
   // browser undoes the text you are typing, which is what you would expect.
@@ -49,6 +56,13 @@ export default function LedgerBoard({ fy }) {
   const incomeCols = months.map((_, i) => sum(sourceCols.map((c) => c[i])));
   const incomeTotal = sum(incomeCols);
 
+  const loc = openCell?.loc;
+  const openRow = !loc
+    ? null
+    : loc.source !== undefined
+      ? ledger.incomeSources[loc.source]?.rows[loc.row] ?? null
+      : ledger[loc.group]?.[loc.row] ?? null;
+
   const netCols = months.map((_, i) => incomeCols[i] - expenseCols[i]);
   const netMax = Math.max(1, ...netCols.map(Math.abs));
   const net = incomeTotal - expenseTotal;
@@ -62,19 +76,25 @@ export default function LedgerBoard({ fy }) {
     { label: "Avg Monthly Net", value: signedAmount(net / 12), note: "Across 12 months", bg: "#fbecc4", fg: "#14150f", chip: "#fff", dot: "#e0a92a" },
   ];
 
-  // Wires one group's rows up to the editing actions.
-  const editable = (key, family, whole) => (row, i) => ({
+  // Wires one group's rows up to the editing actions. `detail` decides how a
+  // cell is edited: fixed costs are single recurring amounts, so they are typed
+  // straight into the grid; everything else opens the breakdown modal.
+  const editable = (key, family, whole, detail = true) => (row, i) => ({
     key: key + "-" + i,
     label: row.label,
     values: row.values,
+    entries: row.entries,
     family,
     pct: share(sum(row.values), whole),
-    onSetValue: (month, value) => setValue(key, i, month, value),
+    onSetValue: detail ? undefined : (month, value) => setValue(key, i, month, value),
+    onOpenCell: detail
+      ? (month) => setOpenCell({ loc: { group: key, row: i }, month, label: row.label })
+      : undefined,
     onSetLabel: (label) => setLabel(key, i, label),
     onRemove: () => removeRow(key, i),
   });
 
-  const fixedRows = fixedCost.map(editable("fixedCost", "warm", expenseTotal));
+  const fixedRows = fixedCost.map(editable("fixedCost", "warm", expenseTotal, false));
   const variableRows = variableCost.map(editable("variableCost", "warm", expenseTotal));
 
   return (
@@ -150,9 +170,12 @@ export default function LedgerBoard({ fy }) {
                   key={ri}
                   label={row.label}
                   values={row.values}
+                  entries={row.entries}
                   family="cool"
                   pct={share(sum(row.values), incomeTotal)}
-                  onSetValue={(month, value) => setIncomeValue(si, ri, month, value)}
+                  onOpenCell={(month) =>
+                    setOpenCell({ loc: { source: si, row: ri }, month, label: src.label + " · " + row.label })
+                  }
                 />
               ))}
               <LedgerRow
@@ -193,6 +216,18 @@ export default function LedgerBoard({ fy }) {
           ))}
         </div>
       </section>
+      {openCell && openRow && (
+        <CellEditor
+          rowLabel={openCell.label}
+          row={openRow}
+          month={openCell.month}
+          onSetTotal={(v) => setCellTotal(openCell.loc, openCell.month, v)}
+          onAddEntry={() => addEntry(openCell.loc, openCell.month)}
+          onSetEntry={(i, field, v) => setEntry(openCell.loc, openCell.month, i, field, v)}
+          onRemoveEntry={(i) => removeEntry(openCell.loc, openCell.month, i)}
+          onClose={() => setOpenCell(null)}
+        />
+      )}
     </>
   );
 }
