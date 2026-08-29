@@ -147,7 +147,15 @@ export function LedgerRow({ label, values, entries, family, pct, emphasis, cellT
   };
 
   return (
-    <div className={editableValues ? "ledger-row ledger-row--editable" : "ledger-row"}>
+    <div
+      className={[
+        "ledger-row",
+        editableValues ? "ledger-row--editable" : "",
+        dark ? "ledger-row--summary" : "",
+      ]
+        .filter(Boolean)
+        .join(" ")}
+    >
       <div
         className="ledger-cell ledger-cell--label"
         style={{

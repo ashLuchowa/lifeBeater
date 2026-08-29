@@ -380,6 +380,11 @@ a:hover { color: #444; }
 
 .ledger-gap { height: 9px; }
 
+/* The dark summary row closes a block, so it gets the same 9px of air the
+   section gaps and the add buttons use — 5px here plus the grid's 4px row
+   gap — rather than sitting flush against the total above it. */
+.ledger-row--summary { margin-top: 5px; }
+
 /* --- Editing: a clickable cell has to sit exactly where the static cell did,
    so it inherits .ledger-cell and only resets the button chrome. Clicking it
    opens the breakdown modal. --- */
