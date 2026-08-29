@@ -10,8 +10,10 @@ const MONTHS = [
   "July", "August", "September", "October", "November", "December",
 ];
 
-export default function DatePicker({ value, today, marked = [], allowFuture = false, onSelect, onClose }) {
-  const anchor = value ? fromStr(value) : new Date();
+export default function DatePicker({ value, initialMonth, today, marked = [], allowFuture = false, onSelect, onClose }) {
+  // Opens on the selected day, else on the month the caller cares about (a
+  // ledger cell opens on its own month), else on the real today.
+  const anchor = value ? fromStr(value) : initialMonth ? fromStr(initialMonth) : new Date();
   const [view, setView] = useState({ y: anchor.getFullYear(), m: anchor.getMonth() });
   const markedSet = new Set(marked);
 

@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { TitlePill } from "./ui";
 import { PlusIcon } from "./icons";
-import { cellAmount, entriesTotal, months } from "@/lib/ledger";
+import { cellAmount, daysInLedgerMonth, entriesTotal, months } from "@/lib/ledger";
 
 const parseAmount = (v) => {
   const n = parseFloat(String(v).replace(/[^0-9.-]/g, ""));
@@ -50,10 +50,12 @@ function Field({ value, placeholder, onCommit, format, parse, style, inputMode }
 // The breakdown behind one month of one row: the individual purchases that make
 // up the figure. The grid only ever shows the total — this is where the detail
 // lives, so the table stays readable.
-export default function CellEditor({ rowLabel, row, month, onSetTotal, onAddEntry, onSetEntry, onRemoveEntry, onClose }) {
+export default function CellEditor({ fy, rowLabel, row, month, onSetTotal, onAddEntry, onSetEntry, onRemoveEntry, onClose }) {
   const entries = row.entries?.[month] ?? [];
   const hasLines = entries.length > 0;
   const total = hasLines ? entriesTotal(entries) : row.values[month];
+  // Real length of this calendar month, so February never offers a 30th.
+  const dayCount = daysInLedgerMonth(fy, month);
 
   useEffect(() => {
     const prev = document.body.style.overflow;
@@ -106,12 +108,19 @@ export default function CellEditor({ rowLabel, row, month, onSetTotal, onAddEntr
             {entries.map((e, i) => (
               <div key={i} style={{ display: "flex", alignItems: "center", gap: 6, background: "#fff", borderRadius: 9, padding: "5px 6px 5px 9px" }}>
                 <span style={{ width: 7, height: 7, borderRadius: "50%", background: "#8a8f83", flex: "none" }} />
-                <Field
-                  value={e.date}
-                  placeholder="1 Jan"
-                  onCommit={(v) => onSetEntry(i, "date", v)}
-                  style={{ ...inp, width: 78, flex: "none" }}
-                />
+                <select
+                  value={e.day || ""}
+                  onChange={(ev) => onSetEntry(i, "day", Number(ev.target.value) || 0)}
+                  aria-label="Day of month"
+                  style={{ ...inp, width: 82, flex: "none", cursor: "pointer" }}
+                >
+                  <option value="">Day…</option>
+                  {Array.from({ length: dayCount }, (_, d) => d + 1).map((d) => (
+                    <option key={d} value={d}>
+                      {d} {months[month]}
+                    </option>
+                  ))}
+                </select>
                 <Field
                   value={e.note}
                   placeholder="Coles"

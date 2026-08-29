@@ -11,6 +11,8 @@ import {
   carryForward,
   entriesTotal,
   normaliseLedger,
+  sortEntries,
+  todayInLedgerMonth,
 } from "@/lib/ledger";
 
 // Cells are addressed the same way whether they live in an expense group or an
@@ -218,10 +220,13 @@ export function useLedger(fy) {
           rowAt(d, loc).values[month] = value;
           return d;
         }),
+      // A new line starts on today when the cell is the current month, so the
+      // common case — recording something as it happens — needs no picking.
       addEntry: (loc, month) =>
         edit((d) => {
           const row = rowAt(d, loc);
-          row.entries[month].push(blankEntry());
+          row.entries[month].push(blankEntry(todayInLedgerMonth(fy, month)));
+          row.entries[month] = sortEntries(row.entries[month]);
           syncCell(row, month);
           return d;
         }),
@@ -229,6 +234,10 @@ export function useLedger(fy) {
         edit((d) => {
           const row = rowAt(d, loc);
           row.entries[month][index][field] = value;
+          // Reorder only when the day changes — picking a day is a deliberate
+          // act, whereas re-sorting mid-sentence would move the row you are
+          // typing in out from under the cursor.
+          if (field === "day") row.entries[month] = sortEntries(row.entries[month]);
           syncCell(row, month);
           return d;
         }),
@@ -240,7 +249,7 @@ export function useLedger(fy) {
           return d;
         }),
     }),
-    [edit],
+    [edit, fy],
   );
 
   return {

@@ -218,6 +218,7 @@ export default function LedgerBoard({ fy }) {
       </section>
       {openCell && openRow && (
         <CellEditor
+          fy={fy}
           rowLabel={openCell.label}
           row={openRow}
           month={openCell.month}
