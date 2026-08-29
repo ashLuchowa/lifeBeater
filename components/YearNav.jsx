@@ -8,6 +8,19 @@ import { createClient } from "@/lib/supabase/client";
 import { useAuth } from "./AuthProvider";
 import { financialYearOptions, fyLabel, maxFinancialYear, minFinancialYear, shiftFinancialYear } from "@/lib/ledger";
 
+// Mirrors the dashboard Today button, for the year you are actually in.
+const thisFyBtn = (isCurrent) => ({
+  padding: "8px 17px",
+  borderRadius: 999,
+  background: isCurrent ? "#14150f" : "transparent",
+  color: isCurrent ? "#fff" : "#14150f",
+  border: "2px solid #14150f",
+  fontSize: 13,
+  fontWeight: 700,
+  whiteSpace: "nowrap",
+  cursor: "pointer",
+});
+
 // Financial-year navigation for the ledger's top bar. The chosen year lives in
 // the URL (?fy=2025-26), so the arrows and the picker are plain links.
 //
@@ -15,11 +28,11 @@ import { financialYearOptions, fyLabel, maxFinancialYear, minFinancialYear, shif
 // gives you a ledger carrying your categories (and fixed costs) forward, and it
 // becomes real the moment you type in it. The arrows walk the same window the
 // picker lists, so neither can reach a year the other will not offer.
-export default function YearNav({ fy }) {
+export default function YearNav({ fy, currentFy }) {
   const next = shiftFinancialYear(fy, 1);
   const prev = shiftFinancialYear(fy, -1);
-  const canGoNext = next <= maxFinancialYear();
-  const canGoPrev = prev >= minFinancialYear();
+  const canGoNext = next <= maxFinancialYear(currentFy);
+  const canGoPrev = prev >= minFinancialYear(currentFy);
 
   return (
     <>
@@ -45,12 +58,16 @@ export default function YearNav({ fy }) {
         <ArrowRightIcon />
       </YearArrow>
 
-      <YearPicker fy={fy} />
+      <Link href={`/income-expense?fy=${currentFy}`} style={thisFyBtn(fy === currentFy)}>
+        This FY
+      </Link>
+
+      <YearPicker fy={fy} currentFy={currentFy} />
     </>
   );
 }
 
-function YearPicker({ fy }) {
+function YearPicker({ fy, currentFy }) {
   const { user } = useAuth();
   const userId = user?.id ?? null;
   const [supabase] = useState(() => createClient());
@@ -74,7 +91,7 @@ function YearPicker({ fy }) {
     };
   }, [open, saved, userId, supabase]);
 
-  const options = financialYearOptions();
+  const options = financialYearOptions(currentFy);
 
   return (
     <div style={{ position: "relative" }}>
