@@ -10,6 +10,7 @@ import {
   blankSource,
   carryForward,
   entriesTotal,
+  isOtherIncome,
   normaliseLedger,
   sortEntries,
   todayInLedgerMonth,
@@ -203,13 +204,15 @@ export function useLedger(fy) {
           d.incomeSources[source].label = label;
           return d;
         }),
+      // New sources go above the pinned "other income" one, which stays last.
       addSource: () =>
         edit((d) => {
-          d.incomeSources.push(blankSource());
+          d.incomeSources.splice(d.incomeSources.length - 1, 0, blankSource());
           return d;
         }),
       removeSource: (source) =>
         edit((d) => {
+          if (isOtherIncome(d.incomeSources[source])) return d;
           d.incomeSources.splice(source, 1);
           return d;
         }),

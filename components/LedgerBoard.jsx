@@ -11,6 +11,7 @@ import {
   cellAmount,
   signedAmount,
   share,
+  isOtherIncome,
 } from "@/lib/ledger";
 
 // Everything below is derived from the five editable groups — nothing here is
@@ -163,7 +164,7 @@ export default function LedgerBoard({ fy }) {
                 label={src.label}
                 placeholder="Income source"
                 onSetLabel={(label) => setSourceLabel(si, label)}
-                onRemove={incomeSources.length > 1 ? () => removeSource(si) : undefined}
+                onRemove={isOtherIncome(src) ? undefined : () => removeSource(si)}
               />
               {src.rows.map((row, ri) => (
                 <LedgerRow
@@ -173,8 +174,16 @@ export default function LedgerBoard({ fy }) {
                   entries={row.entries}
                   family="cool"
                   pct={share(sum(row.values), incomeTotal)}
-                  onOpenCell={(month) =>
-                    setOpenCell({ loc: { source: si, row: ri }, month, label: src.label + " · " + row.label })
+                  onSetValue={
+                    isOtherIncome(src)
+                      ? undefined
+                      : (month, value) => setIncomeValue(si, ri, month, value)
+                  }
+                  onOpenCell={
+                    isOtherIncome(src)
+                      ? (month) =>
+                          setOpenCell({ loc: { source: si, row: ri }, month, label: src.label + " · " + row.label })
+                      : undefined
                   }
                 />
               ))}
