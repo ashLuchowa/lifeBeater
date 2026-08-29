@@ -201,6 +201,7 @@ export function useLedger(fy) {
         }),
       setSourceLabel: (source, label) =>
         edit((d) => {
+          if (isOtherIncome(d.incomeSources[source])) return d;
           d.incomeSources[source].label = label;
           return d;
         }),

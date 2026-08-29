@@ -163,7 +163,7 @@ export default function LedgerBoard({ fy }) {
               <LedgerSection
                 label={src.label}
                 placeholder="Income source"
-                onSetLabel={(label) => setSourceLabel(si, label)}
+                onSetLabel={isOtherIncome(src) ? undefined : (label) => setSourceLabel(si, label)}
                 onRemove={isOtherIncome(src) ? undefined : () => removeSource(si)}
               />
               {src.rows.map((row, ri) => (
