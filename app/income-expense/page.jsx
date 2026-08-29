@@ -3,15 +3,15 @@ import AppShell from "@/components/AppShell";
 import TopBar from "@/components/TopBar";
 import YearNav from "@/components/YearNav";
 import LedgerBoard from "@/components/LedgerBoard";
-import { isFinancialYear, latestFinancialYear } from "@/lib/ledger";
+import { isFinancialYear, defaultFinancialYear } from "@/lib/ledger";
 
 export const metadata = { title: "Income / Expense" };
 
 export default function IncomeExpensePage({ searchParams }) {
-  // The chosen financial year lives in the URL; anything unrecognised falls
-  // back to the most recent year rather than rendering an empty ledger.
+  // The chosen financial year lives in the URL; anything malformed falls back
+  // to the year that actually has figures rather than rendering an empty grid.
   const requested = searchParams?.fy;
-  const fy = isFinancialYear(requested) ? requested : latestFinancialYear;
+  const fy = isFinancialYear(requested) ? requested : defaultFinancialYear;
 
   return (
     <AuthProvider>

@@ -42,11 +42,11 @@ export function LedgerSection({ label, placeholder, onSetLabel, onRemove }) {
     <div className={onSetLabel ? "ledger-row ledger-row--editable" : "ledger-row"}>
       <div className="ledger-cell ledger-cell--label ledger-section">
         {onSetLabel ? (
-          <input
+          <LabelInput
             className="ledger-label-input ledger-label-input--section"
             value={label}
             placeholder={placeholder}
-            onChange={(e) => onSetLabel(e.target.value)}
+            onCommit={onSetLabel}
           />
         ) : (
           label
@@ -58,6 +58,36 @@ export function LedgerSection({ label, placeholder, onSetLabel, onRemove }) {
         )}
       </div>
     </div>
+  );
+}
+
+function LabelInput({ value, placeholder, className, onCommit }) {
+  const [draft, setDraft] = useState(null);
+  const draftRef = useRef(null);
+
+  const set = (v) => {
+    draftRef.current = v;
+    setDraft(v);
+  };
+
+  return (
+    <input
+      className={className}
+      value={draft ?? value}
+      placeholder={placeholder}
+      onChange={(e) => set(e.target.value)}
+      onBlur={() => {
+        if (draftRef.current !== null && draftRef.current !== value) onCommit(draftRef.current);
+        set(null);
+      }}
+      onKeyDown={(e) => {
+        if (e.key === "Enter") e.currentTarget.blur();
+        if (e.key === "Escape") {
+          set(null);
+          e.currentTarget.blur();
+        }
+      }}
+    />
   );
 }
 
@@ -126,11 +156,11 @@ export function LedgerRow({ label, values, family, pct, emphasis, onSetValue, on
         }}
       >
         {onSetLabel ? (
-          <input
+          <LabelInput
             className="ledger-label-input"
             value={label}
             placeholder="Item name"
-            onChange={(e) => onSetLabel(e.target.value)}
+            onCommit={onSetLabel}
           />
         ) : (
           label

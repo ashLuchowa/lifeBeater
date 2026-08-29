@@ -1,6 +1,6 @@
 "use client";
 
-import { Fragment } from "react";
+import { Fragment, useEffect } from "react";
 import { LedgerHead, LedgerRow, LedgerSection, LedgerScroller, LedgerGap, LedgerAddRow } from "./LedgerTable";
 import { useLedger } from "./LedgerData";
 import {
@@ -20,7 +20,23 @@ export default function LedgerBoard({ fy }) {
     ledger, loading, saving, error,
     setValue, setLabel, addRow, removeRow,
     setIncomeValue, setSourceLabel, addSource, removeSource,
+    undo, redo, canUndo, canRedo,
   } = useLedger(fy);
+
+  // Ctrl/Cmd+Z and Ctrl/Cmd+Shift+Z, but only outside a field — inside one the
+  // browser undoes the text you are typing, which is what you would expect.
+  useEffect(() => {
+    const onKey = (e) => {
+      if (!(e.ctrlKey || e.metaKey) || e.key.toLowerCase() !== "z") return;
+      const tag = e.target?.tagName;
+      if (tag === "INPUT" || tag === "TEXTAREA") return;
+      e.preventDefault();
+      if (e.shiftKey) redo();
+      else undo();
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [undo, redo]);
   const { fixedCost, variableCost, incomeSources } = ledger;
 
   const fixedCols = columnTotals(fixedCost);
@@ -78,13 +94,22 @@ export default function LedgerBoard({ fy }) {
         ))}
       </div>
 
+      <div className="ledger-toolbar">
+        <SaveState loading={loading} saving={saving} error={error} />
+        <div className="ledger-toolbar-actions">
+          <button type="button" className="ledger-btn" onClick={undo} disabled={!canUndo}>
+            Undo
+          </button>
+          <button type="button" className="ledger-btn" onClick={redo} disabled={!canRedo}>
+            Redo
+          </button>
+        </div>
+      </div>
+
       <section className="ledger-card">
         <header className="ledger-card-head">
           <div className="ledger-title">Expenses</div>
-          <div className="ledger-card-actions">
-            <span className="ledger-hint">Scroll for months →</span>
-            <SaveState loading={loading} saving={saving} error={error} />
-          </div>
+          <span className="ledger-hint">Scroll for months →</span>
         </header>
 
         <LedgerScroller>
@@ -105,7 +130,7 @@ export default function LedgerBoard({ fy }) {
       <section className="ledger-card">
         <header className="ledger-card-head">
           <div className="ledger-title">Income</div>
-          <SaveState loading={loading} saving={saving} error={error} />
+          <span className="ledger-hint">Scroll for months →</span>
         </header>
 
         <LedgerScroller>
