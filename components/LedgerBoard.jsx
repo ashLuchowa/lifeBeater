@@ -157,46 +157,56 @@ export default function LedgerBoard({ fy }) {
         <LedgerScroller>
           <LedgerHead label="Source" />
 
-          {incomeSources.map((src, si) => (
-            <Fragment key={si}>
-              {si > 0 && <LedgerGap />}
-              <LedgerSection
-                label={src.label}
-                placeholder="Income source"
-                onSetLabel={isOtherIncome(src) ? undefined : (label) => setSourceLabel(si, label)}
-                onRemove={isOtherIncome(src) ? undefined : () => removeSource(si)}
-              />
-              {src.rows.map((row, ri) => (
+          {incomeSources.map((src, si) =>
+            // Other income is a single row per month, not a section of weeks:
+            // its lines carry their own day, so a week dimension adds nothing.
+            isOtherIncome(src) ? (
+              <Fragment key={si}>
+                <LedgerGap />
                 <LedgerRow
-                  key={ri}
-                  label={row.label}
-                  values={row.values}
-                  entries={row.entries}
+                  label={src.label}
+                  values={src.rows[0].values}
+                  entries={src.rows[0].entries}
                   family="cool"
-                  pct={share(sum(row.values), incomeTotal)}
-                  onSetValue={
-                    isOtherIncome(src)
-                      ? undefined
-                      : (month, value) => setIncomeValue(si, ri, month, value)
-                  }
-                  onOpenCell={
-                    isOtherIncome(src)
-                      ? (month) =>
-                          setOpenCell({ loc: { source: si, row: ri }, month, label: src.label + " · " + row.label })
-                      : undefined
+                  pct={share(sum(src.rows[0].values), incomeTotal)}
+                  emphasis="strong"
+                  onOpenCell={(month) =>
+                    setOpenCell({ loc: { source: si, row: 0 }, month, label: src.label })
                   }
                 />
-              ))}
-              <LedgerRow
-                label={(src.label || "Source") + " Total"}
-                values={sourceCols[si]}
-                family="cool"
-                pct={share(sum(sourceCols[si]), incomeTotal)}
-                emphasis="strong"
-              />
-            </Fragment>
-          ))}
+              </Fragment>
+            ) : (
+              <Fragment key={si}>
+                {si > 0 && <LedgerGap />}
+                <LedgerSection
+                  label={src.label}
+                  placeholder="Income source"
+                  onSetLabel={(label) => setSourceLabel(si, label)}
+                  onRemove={() => removeSource(si)}
+                />
+                {src.rows.map((row, ri) => (
+                  <LedgerRow
+                    key={ri}
+                    label={row.label}
+                    values={row.values}
+                    entries={row.entries}
+                    family="cool"
+                    pct={share(sum(row.values), incomeTotal)}
+                    onSetValue={(month, value) => setIncomeValue(si, ri, month, value)}
+                  />
+                ))}
+                <LedgerRow
+                  label={(src.label || "Source") + " Total"}
+                  values={sourceCols[si]}
+                  family="cool"
+                  pct={share(sum(sourceCols[si]), incomeTotal)}
+                  emphasis="strong"
+                />
+              </Fragment>
+            ),
+          )}
 
+          <LedgerGap />
           <LedgerAddRow onClick={addSource}>Add income source</LedgerAddRow>
           <LedgerRow label="All Income" values={incomeCols} family="cool" pct="100%" emphasis="dark" />
         </LedgerScroller>
