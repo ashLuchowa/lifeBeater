@@ -19,6 +19,10 @@ const navBase = {
 
 const navActive = { ...navBase, padding: "7px 15px", background: "#14150f", color: "#fff" };
 
+// No route behind it yet. Dimmed rather than hidden so the section is still
+// visible as planned work, and inert so it never looks clickable.
+const navDisabled = { ...navBase, opacity: 0.4, cursor: "not-allowed" };
+
 // The bar knows about auth and which nav link is active — nothing else. Each
 // page passes its own controls as `children`: the dashboard passes <DayNav />,
 // which is snapshot-backed, and the ledger passes <YearNav />, which is not.
@@ -37,7 +41,7 @@ export default function TopBar({ children }) {
           <HomeIcon color={onLedger ? "#14150f" : "#fff"} />
           Home
         </Link>
-        <div style={navBase}>
+        <div style={navDisabled} title="Coming soon" aria-disabled="true">
           <LedgerIcon />
           Assets &amp; Liabilities
         </div>
