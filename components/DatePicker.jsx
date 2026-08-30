@@ -10,7 +10,7 @@ const MONTHS = [
   "July", "August", "September", "October", "November", "December",
 ];
 
-export default function DatePicker({ value, initialMonth, today, marked = [], allowFuture = false, onSelect, onClose }) {
+export default function DatePicker({ value, initialMonth, today, minDate, marked = [], allowFuture = false, onSelect, onClose }) {
   // Opens on the selected day, else on the month the caller cares about (a
   // ledger cell opens on its own month), else on the real today.
   const anchor = value ? fromStr(value) : initialMonth ? fromStr(initialMonth) : new Date();
@@ -39,6 +39,14 @@ export default function DatePicker({ value, initialMonth, today, marked = [], al
   const afterCurrentMonth = view.y > now.getFullYear() || (view.y === now.getFullYear() && view.m > now.getMonth());
   const nextMonthDisabled = !allowFuture && (atCurrentMonth || afterCurrentMonth);
 
+  // Same idea at the other end: nothing exists before minDate, so do not page
+  // into months that are entirely behind it.
+  const min = minDate ? fromStr(minDate) : null;
+  const prevMonthDisabled =
+    !!min &&
+    (view.y < min.getFullYear() ||
+      (view.y === min.getFullYear() && view.m <= min.getMonth()));
+
   return (
     <>
       <div onClick={onClose} style={{ position: "fixed", inset: 0, zIndex: 40 }} />
@@ -58,7 +66,7 @@ export default function DatePicker({ value, initialMonth, today, marked = [], al
         }}
       >
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 10 }}>
-          <IconButton onClick={() => shiftMonth(-1)} label="Previous month">
+          <IconButton onClick={() => shiftMonth(-1)} label="Previous month" disabled={prevMonthDisabled}>
             <ArrowLeftIcon size={16} />
           </IconButton>
           <div style={{ fontSize: 12.5, fontWeight: 700 }}>
@@ -84,11 +92,12 @@ export default function DatePicker({ value, initialMonth, today, marked = [], al
             const isSelected = s === value;
             const isToday = s === today;
             const isFuture = !allowFuture && today && s > today;
+            const blocked = isFuture || (minDate && s < minDate);
             return (
               <button
                 key={i}
                 type="button"
-                disabled={isFuture}
+                disabled={blocked}
                 onClick={() => {
                   onSelect(s);
                   onClose();
@@ -98,12 +107,12 @@ export default function DatePicker({ value, initialMonth, today, marked = [], al
                   height: 30,
                   border: isToday && !isSelected ? "1px solid #14150f" : "1px solid transparent",
                   borderRadius: 9,
-                  cursor: isFuture ? "not-allowed" : "pointer",
+                  cursor: blocked ? "not-allowed" : "pointer",
                   fontSize: 11.5,
                   fontWeight: 700,
                   background: isSelected ? "#14150f" : "transparent",
                   color: isSelected ? "#fff" : "#14150f",
-                  opacity: isFuture ? 0.28 : 1,
+                  opacity: blocked ? 0.28 : 1,
                 }}
               >
                 {d}

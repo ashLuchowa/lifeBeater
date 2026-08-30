@@ -15,6 +15,8 @@ export default function DayNav() {
     mounted,
     isToday,
     canGoNext,
+    canGoPrev,
+    earliestDate,
     snapshotDates,
     today,
     goToPrevDay,
@@ -28,7 +30,17 @@ export default function DayNav() {
 
   return (
     <>
-      <button type="button" style={navArrowBtn} onClick={goToPrevDay} aria-label="Previous day">
+      <button
+        type="button"
+        style={{
+          ...navArrowBtn,
+          cursor: canGoPrev ? "pointer" : "not-allowed",
+          opacity: canGoPrev ? 1 : 0.3,
+        }}
+        onClick={goToPrevDay}
+        disabled={!canGoPrev}
+        aria-label="Previous day"
+      >
         <ArrowLeftIcon />
       </button>
 
@@ -54,6 +66,7 @@ export default function DayNav() {
           <DatePicker
             value={selectedDate}
             today={today}
+            minDate={earliestDate}
             marked={snapshotDates}
             onSelect={goToDate}
             onClose={() => setPickerOpen(false)}

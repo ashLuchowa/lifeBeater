@@ -2,7 +2,7 @@
 
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
 import { seedData } from "@/lib/data";
-import { addDays, resolveForDate, todayStr } from "@/lib/snapshots";
+import { EARLIEST_DATE, addDays, clampDate, resolveForDate, todayStr } from "@/lib/snapshots";
 import { createClient } from "@/lib/supabase/client";
 import { useAuth } from "./AuthProvider";
 
@@ -79,9 +79,14 @@ export function DashboardDataProvider({ children }) {
     [snapshots, selectedDate],
   );
 
+  // Nor back past the first day there is anything to show.
   const goToPrevDay = useCallback(() => {
     setDirection(-1);
-    setSelectedDate((d) => (d ? addDays(d, -1) : todayStr()));
+    setSelectedDate((d) => {
+      if (!d) return todayStr();
+      const prev = addDays(d, -1);
+      return prev < EARLIEST_DATE ? d : prev;
+    });
   }, []);
 
   // Can't look into the future — the next day doesn't exist yet.
@@ -94,13 +99,7 @@ export function DashboardDataProvider({ children }) {
     });
   }, []);
 
-  const goToDate = useCallback(
-    (s) => {
-      const t = todayStr();
-      goTo(s > t ? t : s);
-    },
-    [goTo],
-  );
+  const goToDate = useCallback((s) => goTo(clampDate(s, todayStr())), [goTo]);
 
   const goToToday = useCallback(() => goTo(todayStr()), [goTo]);
 
@@ -143,6 +142,8 @@ export function DashboardDataProvider({ children }) {
       mounted: selectedDate !== "",
       isToday: selectedDate !== "" && selectedDate === today,
       canGoNext: selectedDate !== "" && selectedDate < today,
+      canGoPrev: selectedDate !== "" && selectedDate > EARLIEST_DATE,
+      earliestDate: EARLIEST_DATE,
       snapshotDates: Object.keys(snapshots),
       hasSnapshot: (s) => Object.prototype.hasOwnProperty.call(snapshots, s),
       goToPrevDay,
