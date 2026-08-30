@@ -42,17 +42,17 @@ function detailLine(profile) {
 }
 
 export default function ProfileCard() {
-  const { data, selectedDate, updateData } = useDashboardData();
+  const { data, selectedWeek, updateData } = useDashboardData();
   const { profile } = data;
 
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState(null);
 
-  // Drop an in-progress edit if the day changes underneath us.
+  // Drop an in-progress edit if the week changes underneath us.
   useEffect(() => {
     setEditing(false);
     setDraft(null);
-  }, [selectedDate]);
+  }, [selectedWeek]);
 
   useEffect(() => {
     if (!editing) return;

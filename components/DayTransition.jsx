@@ -6,22 +6,22 @@ import { useDashboardData } from "./DashboardData";
 // Cross-fades between days: the outgoing day (a frozen HTML snapshot) slides out
 // and fades while the incoming day slides in from the opposite side.
 export default function DayTransition({ children }) {
-  const { selectedDate, direction } = useDashboardData();
+  const { selectedWeek, direction } = useDashboardData();
   const liveRef = useRef(null);
-  const prevToken = useRef(selectedDate);
+  const prevToken = useRef(selectedWeek);
   const pending = useRef(null);
   const seq = useRef(0);
   const [ghost, setGhost] = useState(null);
 
   // Detect the change during render — before React commits the new DOM — so the
   // snapshot we grab is still the previous day's markup.
-  if (prevToken.current !== selectedDate) {
+  if (prevToken.current !== selectedWeek) {
     const firstMount = prevToken.current === "";
     pending.current =
       firstMount || !liveRef.current
         ? null
         : { html: liveRef.current.innerHTML, dir: direction };
-    prevToken.current = selectedDate;
+    prevToken.current = selectedWeek;
   }
 
   useLayoutEffect(() => {
@@ -48,7 +48,7 @@ export default function DayTransition({ children }) {
       )}
       <div
         ref={liveRef}
-        key={selectedDate}
+        key={selectedWeek}
         className={`day-layer day-layer--in-${direction > 0 ? "fwd" : "back"}`}
       >
         {children}

@@ -9,7 +9,7 @@ import { formatMoney, parseMoney, sumMoney } from "@/lib/money";
 const clone = (o) => JSON.parse(JSON.stringify(o));
 
 export default function AssetsLiabilities() {
-  const { data, selectedDate, updateData } = useDashboardData();
+  const { data, selectedWeek, updateData } = useDashboardData();
   const { ledgers } = data;
 
   const [editing, setEditing] = useState(false);
@@ -19,7 +19,7 @@ export default function AssetsLiabilities() {
   useEffect(() => {
     setEditing(false);
     setDraft(null);
-  }, [selectedDate]);
+  }, [selectedWeek]);
 
   // Lock body scroll while the editor modal is open.
   useEffect(() => {
@@ -149,7 +149,7 @@ export default function AssetsLiabilities() {
       {editing && draft && (
         <Editor
           draft={draft}
-          selectedDate={selectedDate}
+          selectedWeek={selectedWeek}
           onSetItem={setItem}
           onAddItem={addItem}
           onRemoveItem={removeItem}
@@ -161,7 +161,7 @@ export default function AssetsLiabilities() {
   );
 }
 
-function Editor({ draft, selectedDate, onSetItem, onAddItem, onRemoveItem, onCancel, onSave }) {
+function Editor({ draft, selectedWeek, onSetItem, onAddItem, onRemoveItem, onCancel, onSave }) {
   const totals = draft.ledgers.map((l) => sumMoney(l.items));
   const net = (totals[0] || 0) - (totals[1] || 0);
   const denom = (totals[0] || 0) + (totals[1] || 0);
@@ -256,7 +256,7 @@ function Editor({ draft, selectedDate, onSetItem, onAddItem, onRemoveItem, onCan
             <div style={{ width: assetShare + "%", background: "#c9e88a" }} />
             <div style={{ width: 100 - assetShare + "%", background: "#dd6f74" }} />
           </div>
-          <div style={{ fontSize: 9.5, fontWeight: 500, opacity: 0.66 }}>Totals update as you edit · saved to {selectedDate}</div>
+          <div style={{ fontSize: 9.5, fontWeight: 500, opacity: 0.66 }}>Totals update as you edit · saved to week of {selectedWeek}</div>
         </div>
       </div>
     </div>

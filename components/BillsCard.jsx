@@ -5,7 +5,7 @@ import { useDashboardData } from "./DashboardData";
 import { TitlePill } from "./ui";
 import { PencilIcon, PlusIcon } from "./icons";
 import { formatMoney, parseMoney } from "@/lib/money";
-import { addDays, formatShort } from "@/lib/snapshots";
+import { formatShort } from "@/lib/snapshots";
 import DatePicker from "./DatePicker";
 
 const clone = (o) => JSON.parse(JSON.stringify(o));
@@ -29,17 +29,17 @@ const sortBills = (list) =>
   });
 
 export default function BillsCard() {
-  const { data, selectedDate, today, updateData } = useDashboardData();
+  const { data, selectedWeek, selectedWeekEnd, today, updateData } = useDashboardData();
   const { bills } = data;
 
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState(null);
 
-  // Abandon an in-progress edit if the day changes underneath us.
+  // Abandon an in-progress edit if the week changes underneath us.
   useEffect(() => {
     setEditing(false);
     setDraft(null);
-  }, [selectedDate]);
+  }, [selectedWeek]);
 
   // Lock body scroll while the editor modal is open.
   useEffect(() => {
@@ -122,12 +122,14 @@ export default function BillsCard() {
         </div>
 
         {sortBills(bills).map((b, i) => {
-          // Urgency as of the day being viewed, not the real today — every other
-          // card shows what was true on its own date, so this one should too.
-          // Keys are YYYY-MM-DD, so string ordering is date ordering.
-          const dated = b.dueDate && selectedDate;
-          const pastDue = dated && b.dueDate < selectedDate;
-          const dueSoon = dated && !pastDue && b.dueDate <= addDays(selectedDate, 2);
+          // Urgency as of the week being viewed, not the real today — every other
+          // card shows what was true in its own week, so this one should too.
+          // Overdue means it fell due before this week began; soon means it falls
+          // due somewhere inside it. Keys are YYYY-MM-DD, so string ordering is
+          // date ordering.
+          const dated = b.dueDate && selectedWeek;
+          const pastDue = dated && b.dueDate < selectedWeek;
+          const dueSoon = dated && !pastDue && b.dueDate <= selectedWeekEnd;
           const dueText = pastDue ? dueLabel(b.dueDate) : dueSoon ? `Soon ${formatShort(b.dueDate)}` : b.due;
           // Amber, but darkened from the #e0a92a dot: at 9.5px on #f6faf2 the raw
           // dot colour reads fainter than the muted text it is meant to outrank.

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { fromStr, toStr } from "@/lib/snapshots";
+import { fromStr, toStr, weekStart } from "@/lib/snapshots";
 import { ArrowLeftIcon, ArrowRightIcon } from "./icons";
 
 const DOW = ["S", "M", "T", "W", "T", "F", "S"];
@@ -10,7 +10,7 @@ const MONTHS = [
   "July", "August", "September", "October", "November", "December",
 ];
 
-export default function DatePicker({ value, initialMonth, today, minDate, marked = [], allowFuture = false, onSelect, onClose }) {
+export default function DatePicker({ value, initialMonth, today, minDate, marked = [], allowFuture = false, weekMode = false, onSelect, onClose }) {
   // Opens on the selected day, else on the month the caller cares about (a
   // ledger cell opens on its own month), else on the real today.
   const anchor = value ? fromStr(value) : initialMonth ? fromStr(initialMonth) : new Date();
@@ -89,7 +89,10 @@ export default function DatePicker({ value, initialMonth, today, minDate, marked
           {cells.map((d, i) => {
             if (d === null) return <div key={i} />;
             const s = cellStr(d);
-            const isSelected = s === value;
+            // In week mode the value is a Monday, so every day of that week reads
+            // as selected and every day of a saved week carries the dot.
+            const key = weekMode ? weekStart(s) : s;
+            const isSelected = key === value;
             const isToday = s === today;
             const isFuture = !allowFuture && today && s > today;
             const blocked = isFuture || (minDate && s < minDate);
@@ -116,7 +119,7 @@ export default function DatePicker({ value, initialMonth, today, minDate, marked
                 }}
               >
                 {d}
-                {markedSet.has(s) && (
+                {markedSet.has(key) && (
                   <span
                     style={{
                       position: "absolute",

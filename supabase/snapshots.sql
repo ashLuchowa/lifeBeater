@@ -1,13 +1,17 @@
 -- Run this once in the Supabase SQL Editor (Project → SQL Editor → New query).
--- Creates the table that stores one row per saved day, and locks it down so
+-- Creates the table that stores one row per saved week, and locks it down so
 -- each signed-in user can only ever see or change their own rows.
+--
+-- A week is identified by its Monday. If you set this up before weekly
+-- snapshots existed, run weekly-snapshots.sql instead — it converts a daily
+-- table in place rather than starting over.
 
 create table if not exists public.snapshots (
   user_id uuid not null references auth.users(id) on delete cascade,
-  date date not null,
+  week_start date not null,
   data jsonb not null,
   updated_at timestamptz not null default now(),
-  primary key (user_id, date)
+  primary key (user_id, week_start)
 );
 
 alter table public.snapshots enable row level security;
