@@ -110,7 +110,7 @@ export default function YearNav({ fy, currentFy }) {
                 Financial year
               </div>
 
-              <div style={{ display: "flex", flexDirection: "column", gap: 2 }}>
+              <div style={{ display: "flex", flexDirection: "column", gap: 2, maxHeight: 280, overflowY: "auto" }}>
                 {financialYearOptions(currentFy).map((y) => {
                   const selected = y === fy;
                   // `saved` is null until the lookup lands; treat unknown as neutral
