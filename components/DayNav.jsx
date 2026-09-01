@@ -48,17 +48,7 @@ export default function DayNav() {
         <button
           type="button"
           onClick={() => setPickerOpen((o) => !o)}
-          style={{
-            padding: "16px 24px",
-            borderRadius: 999,
-            background: "#fff",
-            border: "0px solid #14150f",
-            fontSize: 17,
-            fontWeight: 700,
-            color: "#000000",
-            whiteSpace: "nowrap",
-            cursor: "pointer",
-          }}
+          className="nav-pill"
         >
           {dateLabel}
         </button>
@@ -92,17 +82,7 @@ export default function DayNav() {
       <button
         type="button"
         onClick={goToThisWeek}
-        style={{
-          padding: "8px 17px",
-          borderRadius: 999,
-          background: isCurrentWeek ? "#14150f" : "transparent",
-          color: isCurrentWeek ? "#fff" : "#14150f",
-          border: "2px solid #14150f",
-          fontSize: 13,
-          fontWeight: 700,
-          whiteSpace: "nowrap",
-          cursor: "pointer",
-        }}
+        className={isCurrentWeek ? "nav-cta nav-cta--on" : "nav-cta"}
       >
         This week
       </button>

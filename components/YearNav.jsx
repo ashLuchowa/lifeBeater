@@ -8,34 +8,6 @@ import { createClient } from "@/lib/supabase/client";
 import { useAuth } from "./AuthProvider";
 import { financialYearOptions, fyLabel, maxFinancialYear, minFinancialYear, shiftFinancialYear } from "@/lib/ledger";
 
-// The year pill itself opens the picker, the way the dashboard's date pill
-// opens the calendar.
-const pillBtn = {
-  padding: "16px 24px",
-  borderRadius: 999,
-  background: "#fff",
-  border: "0px solid #14150f",
-  fontSize: 17,
-  fontWeight: 700,
-  fontFamily: "inherit",
-  color: "#000000",
-  whiteSpace: "nowrap",
-  cursor: "pointer",
-};
-
-// Mirrors the dashboard Today button, for the year you are actually in.
-const thisFyBtn = (isCurrent) => ({
-  padding: "8px 17px",
-  borderRadius: 999,
-  background: isCurrent ? "#14150f" : "transparent",
-  color: isCurrent ? "#fff" : "#14150f",
-  border: "2px solid #14150f",
-  fontSize: 13,
-  fontWeight: 700,
-  whiteSpace: "nowrap",
-  cursor: "pointer",
-});
-
 // Financial-year navigation for the ledger's top bar. The chosen year lives in
 // the URL (?fy=2025-26), so the arrows and the picker are plain links.
 //
@@ -83,7 +55,7 @@ export default function YearNav({ fy, currentFy }) {
           type="button"
           onClick={() => setOpen((o) => !o)}
           aria-label="Choose or start a financial year"
-          style={pillBtn}
+          className="nav-pill"
         >
           {fyLabel(fy)}
         </button>
@@ -91,21 +63,7 @@ export default function YearNav({ fy, currentFy }) {
         {open && (
           <>
             <div onClick={() => setOpen(false)} style={{ position: "fixed", inset: 0, zIndex: 40 }} />
-            <div
-              style={{
-                position: "absolute",
-                top: "calc(100% + 8px)",
-                right: 0,
-                zIndex: 50,
-                width: 208,
-                background: "#fff",
-                border: "1px solid #e4e7de",
-                borderRadius: 16,
-                boxShadow: "0 14px 34px rgba(0,0,0,0.16)",
-                padding: 10,
-                color: "#14150f",
-              }}
-            >
+            <div className="nav-popover nav-popover--years">
               <div style={{ fontSize: 9, fontWeight: 700, letterSpacing: "0.06em", textTransform: "uppercase", color: "#8a8f83", padding: "2px 6px 6px" }}>
                 Financial year
               </div>
@@ -153,7 +111,7 @@ export default function YearNav({ fy, currentFy }) {
         <ArrowRightIcon />
       </YearArrow>
 
-      <Link href={`/income-expense?fy=${currentFy}`} style={thisFyBtn(fy === currentFy)}>
+      <Link href={`/income-expense?fy=${currentFy}`} className={fy === currentFy ? "nav-cta nav-cta--on" : "nav-cta"}>
         This FY
       </Link>
     </>

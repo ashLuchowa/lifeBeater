@@ -5,6 +5,14 @@ const strokeProps = {
   strokeLinejoin: "round",
 };
 
+export function MenuIcon({ size = 16, color = "#14150f" }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" stroke={color} {...strokeProps}>
+      <path d="M4 7h16M4 12h16M4 17h16" />
+    </svg>
+  );
+}
+
 export function HomeIcon({ size = 15, color = "#14150f" }) {
   return (
     <svg width={size} height={size} viewBox="0 0 24 24" stroke={color} {...strokeProps}>

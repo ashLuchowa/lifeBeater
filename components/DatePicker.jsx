@@ -50,21 +50,7 @@ export default function DatePicker({ value, initialMonth, today, minDate, marked
   return (
     <>
       <div onClick={onClose} style={{ position: "fixed", inset: 0, zIndex: 40 }} />
-      <div
-        style={{
-          position: "absolute",
-          top: "calc(100% + 8px)",
-          right: 0,
-          zIndex: 50,
-          width: 258,
-          background: "#fff",
-          border: "1px solid #e4e7de",
-          borderRadius: 16,
-          boxShadow: "0 14px 34px rgba(0,0,0,0.16)",
-          padding: 14,
-          color: "#14150f",
-        }}
-      >
+      <div className="nav-popover nav-popover--cal">
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 10 }}>
           <IconButton onClick={() => shiftMonth(-1)} label="Previous month" disabled={prevMonthDisabled}>
             <ArrowLeftIcon size={16} />

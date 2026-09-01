@@ -108,7 +108,6 @@ a:hover { color: #444; }
 .topbar {
   display: flex;
   align-items: center;
-  justify-content: space-between;
   gap: 10px;
   flex-wrap: wrap;
 }
@@ -129,7 +128,96 @@ a:hover { color: #444; }
   display: flex;
   align-items: center;
   gap: 8px;
+  margin-left: auto;
 }
+
+.topbar-link {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 7px 14px;
+  border-radius: 999px;
+  font-size: 13.5px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+.topbar-link--active { padding: 7px 15px; background: #14150f; color: #fff; }
+/* No route behind it yet: visible as planned work, but plainly inert. */
+.topbar-link--off { opacity: 0.4; cursor: not-allowed; }
+
+.topbar-menu { position: relative; display: none; flex: none; }
+
+.topbar-menu-list { display: flex; flex-direction: column; gap: 2px; }
+.topbar-menu-list .topbar-link {
+  width: 100%;
+  border-radius: 9px;
+  padding: 9px 11px;
+  font-size: 12.5px;
+}
+
+@media (max-width: 1024px) {
+  .topbar-nav { display: none; }
+
+  /* Line 1: hamburger left, sign out right. Line 2: the day controls, which
+     take the full width and so are forced onto their own row. */
+  .topbar-menu { display: block; order: 1; }
+  .topbar-signout { order: 2; margin-left: auto; }
+  .topbar-actions {
+    order: 3;
+    width: 100%;
+    margin-left: 0;
+    justify-content: space-between;
+  }
+
+  /* The pill and the arrows already say where you are; the shortcut is the
+     first thing worth losing when width is short. */
+  .nav-cta { display: none; }
+}
+
+/* The big date / financial-year pill that opens a picker. */
+.nav-pill {
+  padding: 16px 24px;
+  border-radius: 999px;
+  background: #fff;
+  border: 0;
+  font-family: inherit;
+  font-size: 17px;
+  font-weight: 700;
+  color: #000;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+/* "This week" / "This FY": outlined, filling in when you are already there. */
+.nav-cta {
+  padding: 8px 17px;
+  border-radius: 999px;
+  border: 2px solid #14150f;
+  background: transparent;
+  color: #14150f;
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 700;
+  white-space: nowrap;
+  cursor: pointer;
+}
+.nav-cta--on { background: #14150f; color: #fff; }
+
+/* Popover hanging off a nav pill (the calendar, the year list). */
+.nav-popover {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  z-index: 50;
+  background: #fff;
+  border: 1px solid #e4e7de;
+  border-radius: 16px;
+  box-shadow: 0 14px 34px rgba(0, 0, 0, 0.16);
+  color: #14150f;
+}
+.nav-popover--cal { width: 258px; padding: 14px; }
+.nav-popover--menu { width: 216px; padding: 8px; left: 0; right: auto; }
+.nav-popover--years { width: 208px; padding: 10px; }
 
 /*---------- COMING SOON ----------*/
 .coming-soon {
@@ -177,13 +265,19 @@ a:hover { color: #444; }
   .dashboard-body { grid-template-columns: 1fr; gap: 14px; }
   .health-skills-grid { grid-template-columns: 1fr; }
   .assets-grid { grid-template-columns: 1fr; }
-  .topbar-nav { order: 3; width: 100%; }
-  .topbar-actions { order: 2; margin-left: auto; }
+  .topbar-actions { flex-wrap: wrap; row-gap: 8px; }
+  .nav-pill { padding: 10px 15px; font-size: 14px; }
+  .nav-cta { padding: 7px 13px; font-size: 12px; }
+  /* Anchored left instead, or a 258px panel runs off a narrow screen. */
+  .nav-popover { left: 0; right: auto; }
+  .nav-popover--cal { width: min(258px, calc(100vw - 48px)); }
+  .nav-popover--years { width: min(208px, calc(100vw - 48px)); }
 }
 
 @media (max-width: 420px) {
   .dashboard-main { padding: 8px; }
   .dashboard-panel { padding: 10px; border-radius: 12px; }
+  .nav-pill { padding: 9px 12px; font-size: 12.5px; }
 }
 
 /*---------- LEDGER (Income / Expense page) ----------*/
