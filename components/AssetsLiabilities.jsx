@@ -106,7 +106,7 @@ export default function AssetsLiabilities() {
         <div className="assets-grid">
           {ledgers.map((l, li) => (
             <div key={l.label} style={{ borderRadius: 14, padding: 12, background: l.bg, display: "flex", flexDirection: "column", gap: 9, minWidth: 0 }}>
-              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 6 }}>
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 6, flexWrap: "wrap", rowGap: 4 }}>
                 <div style={{ padding: "5px 9px", borderRadius: 8, background: "#fff", fontSize: 10, fontWeight: 700, whiteSpace: "nowrap", flex: "none" }}>
                   {l.label}
                 </div>
@@ -135,9 +135,7 @@ export default function AssetsLiabilities() {
                 Net Worth
               </div>
             </div>
-            <div style={{ fontSize: 24, fontWeight: 800, letterSpacing: "-0.03em", whiteSpace: "nowrap", textAlign: "center" }}>
-              {formatMoney(net)}
-            </div>
+            <div className="networth-value">{formatMoney(net)}</div>
             <div style={{ display: "flex", height: 6, borderRadius: 999, overflow: "hidden", background: "rgba(255,255,255,0.16)" }}>
               <div style={{ width: assetShare + "%", background: "#c9e88a" }} />
               <div style={{ width: 100 - assetShare + "%", background: "#dd6f74" }} />
