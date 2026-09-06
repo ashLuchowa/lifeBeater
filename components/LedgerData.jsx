@@ -22,10 +22,11 @@ import {
 const rowAt = (d, loc) =>
   loc.source !== undefined ? d.incomeSources[loc.source].rows[loc.row] : d[loc.group][loc.row];
 
-// A month showing a breakdown is always the sum of its lines. Deleting the last
-// line leaves the figure standing — it just becomes typeable again.
+// A month's cell always mirrors its lines: their running sum while any exist,
+// and back to zero once the last line is removed — so adding then deleting a
+// line never strands a figure you have to clear by hand.
 const syncCell = (row, month) => {
-  if (row.entries[month].length) row.values[month] = entriesTotal(row.entries[month]);
+  row.values[month] = entriesTotal(row.entries[month]);
 };
 
 // How many steps back you can go. Each entry is a whole ledger document, which
@@ -219,9 +220,14 @@ export function useLedger(fy) {
         }),
 
       // Per-cell breakdown, shared by expense and income cells via `loc`.
-      setCellTotal: (loc, month, value) =>
+      // Turn a directly-entered figure into the opening line of its breakdown,
+      // so a cell that carries an amount but no lines becomes editable line by
+      // line. Guarded by the caller; the check here is belt-and-braces.
+      seedFirstEntry: (loc, month) =>
         edit((d) => {
-          rowAt(d, loc).values[month] = value;
+          const row = rowAt(d, loc);
+          if (row.entries[month].length || !row.values[month]) return d;
+          row.entries[month].push({ day: 0, note: "", amount: row.values[month] });
           return d;
         }),
       // A new line starts on today when the cell is the current month, so the

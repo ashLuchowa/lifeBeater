@@ -24,13 +24,27 @@ export default function LedgerBoard({ fy }) {
     setValue, setLabel, addRow, removeRow,
     setIncomeValue, setSourceLabel, addSource, removeSource,
     undo, redo, canUndo, canRedo,
-    setCellTotal, addEntry, setEntry, removeEntry,
+    seedFirstEntry, addEntry, setEntry, removeEntry,
   } = useLedger(fy);
 
   // Which cell is open in the breakdown modal: { loc, month, label } or null.
   // Only the address is held — the row itself is read live out of the ledger on
   // every render, so the modal reflects each edit instead of a stale snapshot.
   const [openCell, setOpenCell] = useState(null);
+
+  // Open the breakdown modal for a cell. If the cell still holds a plain typed
+  // figure (no lines), fold that figure into its first line on the way in, so
+  // everything in the modal is line-based and nothing has to be re-keyed.
+  const openBreakdown = (loc, month, label) => {
+    const row =
+      loc.source !== undefined
+        ? ledger.incomeSources[loc.source]?.rows[loc.row]
+        : ledger[loc.group]?.[loc.row];
+    if (row && !row.entries?.[month]?.length && row.values[month]) {
+      seedFirstEntry(loc, month);
+    }
+    setOpenCell({ loc, month, label });
+  };
 
   // Ctrl/Cmd+Z and Ctrl/Cmd+Shift+Z, but only outside a field — inside one the
   // browser undoes the text you are typing, which is what you would expect.
@@ -90,7 +104,7 @@ export default function LedgerBoard({ fy }) {
     pct: share(sum(row.values), whole),
     onSetValue: detail ? undefined : (month, value) => setValue(key, i, month, value),
     onOpenCell: detail
-      ? (month) => setOpenCell({ loc: { group: key, row: i }, month, label: row.label })
+      ? (month) => openBreakdown({ group: key, row: i }, month, row.label)
       : undefined,
     onSetLabel: (label) => setLabel(key, i, label),
     onRemove: () => removeRow(key, i),
@@ -171,9 +185,7 @@ export default function LedgerBoard({ fy }) {
                   family="cool"
                   pct={share(sum(src.rows[0].values), incomeTotal)}
                   emphasis="strong"
-                  onOpenCell={(month) =>
-                    setOpenCell({ loc: { source: si, row: 0 }, month, label: src.label })
-                  }
+                  onOpenCell={(month) => openBreakdown({ source: si, row: 0 }, month, src.label)}
                 />
               </Fragment>
             ) : (
@@ -243,7 +255,6 @@ export default function LedgerBoard({ fy }) {
           rowLabel={openCell.label}
           row={openRow}
           month={openCell.month}
-          onSetTotal={(v) => setCellTotal(openCell.loc, openCell.month, v)}
           onAddEntry={() => addEntry(openCell.loc, openCell.month)}
           onSetEntry={(i, field, v) => setEntry(openCell.loc, openCell.month, i, field, v)}
           onRemoveEntry={(i) => removeEntry(openCell.loc, openCell.month, i)}

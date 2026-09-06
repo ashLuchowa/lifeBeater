@@ -50,10 +50,11 @@ function Field({ value, placeholder, onCommit, format, parse, style, inputMode }
 // The breakdown behind one month of one row: the individual purchases that make
 // up the figure. The grid only ever shows the total — this is where the detail
 // lives, so the table stays readable.
-export default function CellEditor({ fy, rowLabel, row, month, onSetTotal, onAddEntry, onSetEntry, onRemoveEntry, onClose }) {
+export default function CellEditor({ fy, rowLabel, row, month, onAddEntry, onSetEntry, onRemoveEntry, onClose }) {
   const entries = row.entries?.[month] ?? [];
   const hasLines = entries.length > 0;
-  const total = hasLines ? entriesTotal(entries) : row.values[month];
+  // The figure is only ever the sum of the lines — there is no typing it in.
+  const total = entriesTotal(entries);
   // Real length of this calendar month, so February never offers a 30th.
   const dayCount = daysInLedgerMonth(fy, month);
 
@@ -144,8 +145,8 @@ export default function CellEditor({ fy, rowLabel, row, month, onSetTotal, onAdd
 
             {!hasLines && (
               <div style={{ fontSize: 10.5, fontWeight: 600, color: "#8a8f83", lineHeight: 1.45, padding: "2px 2px" }}>
-                No breakdown for this month. Type the amount below, or add lines and
-                the total will be worked out from them.
+                No lines for this month yet. Add a line to enter an amount — the
+                total is added up from the lines.
               </div>
             )}
           </div>
@@ -161,36 +162,12 @@ export default function CellEditor({ fy, rowLabel, row, month, onSetTotal, onAdd
             <div style={{ padding: "5px 9px", borderRadius: 8, background: "rgba(255,255,255,0.12)", fontSize: 10, fontWeight: 700 }}>
               {months[month]} total
             </div>
-            {hasLines ? (
-              <div style={{ fontSize: 20, fontWeight: 800, letterSpacing: "-0.03em" }}>{"$" + cellAmount(total)}</div>
-            ) : (
-              <Field
-                value={row.values[month]}
-                placeholder="$0"
-                inputMode="decimal"
-                format={cellAmount}
-                parse={parseAmount}
-                onCommit={onSetTotal}
-                style={{
-                  width: 140,
-                  border: "1px solid rgba(255,255,255,0.25)",
-                  borderRadius: 9,
-                  padding: "6px 10px",
-                  background: "rgba(255,255,255,0.08)",
-                  color: "#fff",
-                  fontFamily: "inherit",
-                  fontSize: 18,
-                  fontWeight: 800,
-                  textAlign: "right",
-                  outline: "none",
-                }}
-              />
-            )}
+            <div style={{ fontSize: 20, fontWeight: 800, letterSpacing: "-0.03em" }}>{"$" + cellAmount(total)}</div>
           </div>
           <div style={{ fontSize: 9.5, fontWeight: 500, opacity: 0.66 }}>
             {hasLines
-              ? "Worked out from the lines above · saved as you go"
-              : "Typed directly · add a line to break it down"}
+              ? "Added up from the lines above · saved as you go"
+              : "Add a line to enter an amount"}
           </div>
         </div>
       </div>
