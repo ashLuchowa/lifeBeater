@@ -4,13 +4,13 @@ import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { useAuth } from "./AuthProvider";
-import { CardHeader } from "./ui";
+import { TitlePill } from "./ui";
 import { ledgerMonthOf, ledgerMonthlyTotals } from "@/lib/ledger";
 
 const CAL_MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 
 // How many trailing calendar months the card covers. The fixed card height
-// below is sized to give this many bar rows some breathing room.
+// below is sized to hold this many month chips.
 const WINDOW = 4;
 
 const INCOME = "#e0a92a";
@@ -20,28 +20,34 @@ const money = (n) => "$" + Math.round(n).toLocaleString("en-NZ");
 
 const legendDot = (color) => ({ width: 7, height: 7, borderRadius: 2, background: color, display: "block" });
 
-// One month: income bar over expense bar, both scaled to the window's peak.
-function MonthRow({ label, income, expense, max }) {
+// One month, styled to match a Milestones chip: pale panel, hairline border,
+// a label/figures row above a pair of thin tracks (income over expense), both
+// scaled to the window's peak.
+function MonthChip({ label, income, expense, max }) {
   return (
-    <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-      <div style={{ width: 24, flex: "none", fontSize: 8.5, fontWeight: 700, color: "#8a8f83" }}>{label}</div>
-      <div style={{ flex: 1, minWidth: 0, display: "flex", flexDirection: "column", gap: 3 }}>
-        <Bar value={income} max={max} color="#FFD25B" />
-        <Bar value={expense} max={max} color="#FF777B" />
+    <div style={{ display: "flex", flexDirection: "column", gap: 6, background: "#f6faf2", border: "1px solid #eaf0e2", borderRadius: 12, padding: "8px 12px" }}>
+      <div style={{ display: "flex", alignItems: "center", gap: 9 }}>
+        <span style={{ flex: 1, minWidth: 0, fontSize: 11.5, fontWeight: 700, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+          {label}
+        </span>
+        <span style={{ display: "flex", gap: 8, fontSize: 9.5, fontWeight: 700, whiteSpace: "nowrap", flex: "none" }}>
+          <span style={{ color: INCOME }}>{money(income)}</span>
+          <span style={{ color: EXPENSE }}>{money(expense)}</span>
+        </span>
       </div>
-      <div style={{ width: 50, flex: "none", textAlign: "right", display: "flex", flexDirection: "column", gap: 3, fontSize: 8.5, fontWeight: 700 }}>
-        <span style={{ color: INCOME }}>{money(income)}</span>
-        <span style={{ color: EXPENSE }}>{money(expense)}</span>
+      <div style={{ display: "flex", flexDirection: "column", gap: 3 }}>
+        <Track value={income} max={max} color={INCOME} />
+        <Track value={expense} max={max} color={EXPENSE} />
       </div>
     </div>
   );
 }
 
-function Bar({ value, max, color }) {
+function Track({ value, max, color }) {
   const pct = value <= 0 ? 0 : Math.max(3, Math.round((value / max) * 100));
   return (
-    <div style={{ height: 7, borderRadius: 3, background: "#f0f1ec", overflow: "hidden" }}>
-      <div style={{ width: pct + "%", height: "100%", borderRadius: 3, background: color }} />
+    <div style={{ height: 6, borderRadius: 999, background: "#e6ecdc", overflow: "hidden" }}>
+      <div style={{ width: pct + "%", height: "100%", borderRadius: 999, background: color }} />
     </div>
   );
 }
@@ -55,12 +61,12 @@ export default function CashflowChart() {
   const [supabase] = useState(() => createClient());
   const [ledgers, setLedgers] = useState(null); // { [fy]: rawData } once loaded
 
-  // The trailing WINDOW calendar months, oldest first, each tagged with the
-  // financial year and column index it maps to.
+  // The trailing WINDOW calendar months, newest first (running month on top),
+  // each tagged with the financial year and column index it maps to.
   const windowMonths = useMemo(() => {
     const now = new Date();
     return Array.from({ length: WINDOW }, (_, k) => {
-      const d = new Date(now.getFullYear(), now.getMonth() - (WINDOW - 1 - k), 1);
+      const d = new Date(now.getFullYear(), now.getMonth() - k, 1);
       return { label: CAL_MONTHS[d.getMonth()], ...ledgerMonthOf(d) };
     });
   }, []);
@@ -102,12 +108,14 @@ export default function CashflowChart() {
 
   return (
     <Link href="/income-expense" className="card-link" aria-label="Open the Income / Expense page">
-      <div style={{ background: "#fff", borderRadius: 18, padding: 16, display: "flex", flexDirection: "column", gap: 9, minWidth: 0, minHeight: 0, height: 224 }}>
-        <CardHeader title="Income / Expense" />
+      <div style={{ background: "#fff", borderRadius: 18, padding: "12px 14px", display: "flex", flexDirection: "column", gap: 7, minWidth: 0, minHeight: 0, overflow: "hidden", height: 324 }}>
+        <div style={{ display: "flex" }}>
+          <TitlePill size="sm">Income / Expense</TitlePill>
+        </div>
 
-        <div style={{ display: "flex", flexDirection: "column", justifyContent: "center", gap: 15, flex: 1, minHeight: 0 }}>
+        <div style={{ display: "flex", flexDirection: "column", gap: 7, flex: 1, minHeight: 0 }}>
           {rows.map((r) => (
-            <MonthRow key={r.label} {...r} max={max} />
+            <MonthChip key={r.label} {...r} max={max} />
           ))}
         </div>
 
