@@ -61,15 +61,20 @@ export function DashboardDataProvider({ children }) {
       // Guarantee the current week has its own row, carrying forward whatever
       // was true as of the last saved week — so every week you actually open
       // the app ends up with a real snapshot for later charting.
+      //
+      // Only when the load actually succeeded: on error `map` is empty and does
+      // not reflect the database, so writing seed data here would overwrite a
+      // real snapshot we merely failed to read. `ignoreDuplicates` is a second
+      // guard — this write must never replace an existing row.
       const w = thisWeek();
-      if (!(w in map)) {
+      if (!error && !(w in map)) {
         const carried = resolveForDate(map, w, seedData).data;
         map = { ...map, [w]: carried };
         supabase
           .from("snapshots")
           .upsert(
             { user_id: userId, week_start: w, data: carried, updated_at: new Date().toISOString() },
-            { onConflict: "user_id,week_start" },
+            { onConflict: "user_id,week_start", ignoreDuplicates: true },
           )
           .then(({ error }) => {
             if (error) console.error("Failed to seed this week's snapshot", error);
