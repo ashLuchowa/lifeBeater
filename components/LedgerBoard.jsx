@@ -27,15 +27,17 @@ export default function LedgerBoard({ fy }) {
     seedFirstEntry, addEntry, setEntry, removeEntry,
   } = useLedger(fy);
 
-  // Which cell is open in the breakdown modal: { loc, month, label } or null.
-  // Only the address is held — the row itself is read live out of the ledger on
-  // every render, so the modal reflects each edit instead of a stale snapshot.
+  // Which cell is open in the breakdown modal: { loc, month, label, family } or
+  // null. Only the address is held — the row itself is read live out of the
+  // ledger on every render, so the modal reflects each edit instead of a stale
+  // snapshot. `family` ("warm" cost / "cool" income) carries the grid's own
+  // colour language into the modal.
   const [openCell, setOpenCell] = useState(null);
 
   // Open the breakdown modal for a cell. If the cell still holds a plain typed
   // figure (no lines), fold that figure into its first line on the way in, so
   // everything in the modal is line-based and nothing has to be re-keyed.
-  const openBreakdown = (loc, month, label) => {
+  const openBreakdown = (loc, month, label, family) => {
     const row =
       loc.source !== undefined
         ? ledger.incomeSources[loc.source]?.rows[loc.row]
@@ -43,7 +45,7 @@ export default function LedgerBoard({ fy }) {
     if (row && !row.entries?.[month]?.length && row.values[month]) {
       seedFirstEntry(loc, month);
     }
-    setOpenCell({ loc, month, label });
+    setOpenCell({ loc, month, label, family });
   };
 
   // Ctrl/Cmd+Z and Ctrl/Cmd+Shift+Z, but only outside a field — inside one the
@@ -85,11 +87,15 @@ export default function LedgerBoard({ fy }) {
 
   const pctOfIncome = incomeTotal > 0 ? ((net / incomeTotal) * 100).toFixed(1) + "% of income" : "No income recorded";
 
+  // `light` cards box their figure in white — the same "figure on white, inside
+  // the colour" idiom as an Assets & Liabilities item row. Net Position is
+  // already dark, so its figure sits directly on it, same as the Net Worth
+  // card on the dashboard.
   const summary = [
-    { label: "Total Income", value: "$" + cellAmount(incomeTotal), note: "Main, side and other", bg: "#dff1e4", fg: "#14150f", chip: "#fff", dot: "#4a9c68" },
-    { label: "Total Expenses", value: "$" + cellAmount(expenseTotal), note: "Fixed and variable", bg: "#fbd9da", fg: "#14150f", chip: "#fff", dot: "#dd6f74" },
+    { label: "Total Income", value: "$" + cellAmount(incomeTotal), note: "Main, side and other", bg: "#dff1e4", fg: "#14150f", chip: "#fff", dot: "#4a9c68", light: true },
+    { label: "Total Expenses", value: "$" + cellAmount(expenseTotal), note: "Fixed and variable", bg: "#fbd9da", fg: "#14150f", chip: "#fff", dot: "#dd6f74", light: true },
     { label: "Net Position", value: signedAmount(net), note: pctOfIncome, bg: "#14150f", fg: "#fff", chip: "rgba(255,255,255,0.12)", dot: "#e0a92a" },
-    { label: "Avg Monthly Net", value: signedAmount(net / 12), note: "Across 12 months", bg: "#fbecc4", fg: "#14150f", chip: "#fff", dot: "#e0a92a" },
+    { label: "Avg Monthly Net", value: signedAmount(net / 12), note: "Across 12 months", bg: "#fbecc4", fg: "#14150f", chip: "#fff", dot: "#e0a92a", light: true },
   ];
 
   // Wires one group's rows up to the editing actions. `detail` decides how a
@@ -104,7 +110,7 @@ export default function LedgerBoard({ fy }) {
     pct: share(sum(row.values), whole),
     onSetValue: detail ? undefined : (month, value) => setValue(key, i, month, value),
     onOpenCell: detail
-      ? (month) => openBreakdown({ group: key, row: i }, month, row.label)
+      ? (month) => openBreakdown({ group: key, row: i }, month, row.label, "warm")
       : undefined,
     onSetLabel: (label) => setLabel(key, i, label),
     onRemove: () => removeRow(key, i),
@@ -122,7 +128,7 @@ export default function LedgerBoard({ fy }) {
               <span className="ledger-summary-chip" style={{ background: s.chip }}>{s.label}</span>
               <span className="ledger-dot" style={{ background: s.dot }} />
             </div>
-            <div>
+            <div className={s.light ? "ledger-summary-figure" : undefined}>
               <div className="ledger-summary-value">{s.value}</div>
               <div className="ledger-summary-note">{s.note}</div>
             </div>
@@ -185,7 +191,7 @@ export default function LedgerBoard({ fy }) {
                   family="cool"
                   pct={share(sum(src.rows[0].values), incomeTotal)}
                   emphasis="strong"
-                  onOpenCell={(month) => openBreakdown({ source: si, row: 0 }, month, src.label)}
+                  onOpenCell={(month) => openBreakdown({ source: si, row: 0 }, month, src.label, "cool")}
                 />
               </Fragment>
             ) : (
@@ -234,7 +240,7 @@ export default function LedgerBoard({ fy }) {
         <div className="ledger-net-grid">
           {months.map((m, i) => (
             <div key={m} className="ledger-net-card" style={{ background: netCols[i] < 0 ? "#fbd9da" : "#dff1e4" }}>
-              <div className="ledger-net-month">{m}</div>
+              <span className="ledger-net-month">{m}</span>
               <div className="ledger-net-value">{signedAmount(netCols[i])}</div>
               <div className="ledger-net-track">
                 <div
@@ -253,6 +259,7 @@ export default function LedgerBoard({ fy }) {
         <CellEditor
           fy={fy}
           rowLabel={openCell.label}
+          family={openCell.family}
           row={openRow}
           month={openCell.month}
           onAddEntry={() => addEntry(openCell.loc, openCell.month)}

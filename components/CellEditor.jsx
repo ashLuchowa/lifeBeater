@@ -50,13 +50,19 @@ function Field({ value, placeholder, onCommit, format, parse, style, inputMode }
 // The breakdown behind one month of one row: the individual purchases that make
 // up the figure. The grid only ever shows the total — this is where the detail
 // lives, so the table stays readable.
-export default function CellEditor({ fy, rowLabel, row, month, onAddEntry, onSetEntry, onRemoveEntry, onClose }) {
+export default function CellEditor({ fy, rowLabel, row, month, family, onAddEntry, onSetEntry, onRemoveEntry, onClose }) {
   const entries = row.entries?.[month] ?? [];
   const hasLines = entries.length > 0;
   // The figure is only ever the sum of the lines — there is no typing it in.
   const total = entriesTotal(entries);
   // Real length of this calendar month, so February never offers a 30th.
   const dayCount = daysInLedgerMonth(fy, month);
+  // Same warm-cost / cool-income colour language as the grid, carried onto the
+  // breakdown panel and its line dots instead of a flat neutral green.
+  const isWarm = family === "warm";
+  const panelBg = isWarm ? "#fdf2f2" : "#f6faf2";
+  const panelBorder = isWarm ? "#f7dfdf" : "#eaf0e2";
+  const dotColor = isWarm ? "#dd6f74" : "#4a9c68";
 
   useEffect(() => {
     const prev = document.body.style.overflow;
@@ -104,11 +110,11 @@ export default function CellEditor({ fy, rowLabel, row, month, onAddEntry, onSet
           </button>
         </div>
 
-        <div style={{ borderRadius: 14, padding: 12, background: "#f6faf2", border: "1px solid #eaf0e2", display: "flex", flexDirection: "column", gap: 8 }}>
+        <div style={{ borderRadius: 14, padding: 12, background: panelBg, border: "1px solid " + panelBorder, display: "flex", flexDirection: "column", gap: 8 }}>
           <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
             {entries.map((e, i) => (
               <div key={i} style={{ display: "flex", alignItems: "center", gap: 6, background: "#fff", borderRadius: 9, padding: "5px 6px 5px 9px" }}>
-                <span style={{ width: 7, height: 7, borderRadius: "50%", background: "#8a8f83", flex: "none" }} />
+                <span style={{ width: 7, height: 7, borderRadius: "50%", background: dotColor, flex: "none" }} />
                 <select
                   value={e.day || ""}
                   onChange={(ev) => onSetEntry(i, "day", Number(ev.target.value) || 0)}

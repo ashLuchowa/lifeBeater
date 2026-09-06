@@ -376,6 +376,15 @@ a:hover { color: #444; }
   display: block;
 }
 
+/* Boxes a card's figure in white, the same "figure on white, inside the
+   colour" idiom as an Assets & Liabilities item row. Only used by the light
+   summary cards — the dark Net Position card's figure sits directly on it. */
+.ledger-summary-figure {
+  background: #fff;
+  border-radius: 12px;
+  padding: 9px 11px;
+}
+
 .ledger-summary-value {
   font-size: 23px;
   font-weight: 800;
@@ -655,12 +664,18 @@ a:hover { color: #444; }
   gap: 6px;
 }
 
+/* White pill chip, matching the Assets & Liabilities / summary-card label
+   idiom, instead of bare text sitting directly on the tint. */
 .ledger-net-month {
+  align-self: flex-start;
+  padding: 3px 8px;
+  border-radius: 7px;
+  background: #fff;
   font-size: 9px;
   font-weight: 700;
-  letter-spacing: 0.06em;
+  letter-spacing: 0.04em;
   text-transform: uppercase;
-  color: #5c6156;
+  color: #14150f;
 }
 
 .ledger-net-value {

@@ -138,7 +138,6 @@ export function LedgerRow({ label, values, entries, family, pct, emphasis, cellT
   const dark = emphasis === "dark";
   const strong = emphasis === "strong";
   const accent = family === "warm" ? "#fbd9da" : "#dff1e4";
-  const totalTint = family === "warm" ? "#fbecc4" : "#dff1e4";
   const editableValues = Boolean(onOpenCell || onSetValue);
 
   const base = {
@@ -220,12 +219,17 @@ export function LedgerRow({ label, values, entries, family, pct, emphasis, cellT
         );
       })}
 
+      {/* A plain row's total sits in its own white box — the same "figure on
+          white, inside the colour" idiom as an Assets & Liabilities item row —
+          rather than the solid heat-map tint used for its monthly cells.
+          Subtotal ("strong") and grand-total ("dark") rows keep their existing
+          band colour so those tiers still read as a step up. */}
       <div
         className="ledger-cell ledger-cell--total"
         style={{
           ...base,
           fontWeight: 800,
-          background: dark ? "#14150f" : strong ? accent : totalTint,
+          background: dark ? "#14150f" : strong ? accent : "#fff",
           color: dark ? "#fff" : "#14150f",
         }}
       >
