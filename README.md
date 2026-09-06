@@ -21,7 +21,7 @@ Open http://localhost:3000.
 | `components/TitleRow.jsx` | "Home", date stepper, Today pill |
 | `components/ProfileCard.jsx` | Dark profile card with achievement badges |
 | `components/Milestones.jsx` | Milestone rows with progress bars |
-| `components/CashflowChart.jsx` | Grouped income/expense bar chart |
+| `components/CashflowChart.jsx` | Trailing-4-month income/expense bars, read live from the ledger; links to the ledger page |
 | `components/AssetsLiabilities.jsx` | Itemized asset + liability tiles and net worth tile |
 | `components/HealthCard.jsx` | Sleep / Steps / Resting HR / Weight-BMI tiles |
 | `components/SkillsCard.jsx` | Skills grouped by category |

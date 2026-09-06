@@ -30,7 +30,7 @@ export default function Page() {
                   <div className="dashboard-col">
                     <ProfileCard />
                     <ComingSoon fill><Milestones /></ComingSoon>
-                    <ComingSoon><CashflowChart /></ComingSoon>
+                    <CashflowChart />
                   </div>
 
                   <div className="dashboard-col">
