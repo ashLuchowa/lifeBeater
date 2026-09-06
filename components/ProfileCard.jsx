@@ -29,6 +29,7 @@ function identity(profile) {
   const loc = splitLocation(profile.location ?? meta.location);
   return {
     name: profile.name ?? "",
+    title: profile.title ?? "",
     age: profile.age ?? meta.age ?? "",
     city: profile.city ?? loc.city ?? "",
     country: profile.country ?? loc.country ?? "",
@@ -65,7 +66,7 @@ export default function ProfileCard() {
 
   const startEdit = () => {
     const id = identity(profile);
-    setDraft({ name: id.name, age: String(id.age || ""), city: id.city, country: id.country });
+    setDraft({ name: id.name, title: id.title, age: String(id.age || ""), city: id.city, country: id.country });
     setEditing(true);
   };
   const cancel = () => {
@@ -74,13 +75,14 @@ export default function ProfileCard() {
   };
   const save = () => {
     const name = draft.name.trim();
+    const title = draft.title.trim();
     const city = draft.city.trim();
     const country = draft.country.trim();
     const ageNum = parseInt(draft.age, 10);
     const age = Number.isFinite(ageNum) ? ageNum : null;
     updateData((d) => {
       const place = [city, country].filter(Boolean).join(", ");
-      const next = { ...d.profile, name, age, city, country, location: place };
+      const next = { ...d.profile, name, title, age, city, country, location: place };
       next.meta = [age ? `${age} yrs` : null, place].filter(Boolean).join(" · ");
       d.profile = next;
       return d;
@@ -98,6 +100,11 @@ export default function ProfileCard() {
             <div style={{ fontSize: 18, fontWeight: 800, letterSpacing: "-0.02em", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
               {profile.name}
             </div>
+            {identity(profile).title && (
+              <div style={{ fontSize: 11.5, fontWeight: 700, color: "#f0b323", marginTop: 2, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+                {identity(profile).title}
+              </div>
+            )}
             <div style={{ fontSize: 11.5, fontWeight: 600, opacity: 0.6, marginTop: 2 }}>{detailLine(profile)}</div>
           </div>
           <button
@@ -176,6 +183,16 @@ export default function ProfileCard() {
                 placeholder="Your name"
                 autoFocus
                 onChange={(e) => setDraft((d) => ({ ...d, name: e.target.value }))}
+                style={inp}
+              />
+            </label>
+
+            <label style={field}>
+              <span style={fieldLabel}>Job title</span>
+              <input
+                value={draft.title}
+                placeholder="Logistics Operator"
+                onChange={(e) => setDraft((d) => ({ ...d, title: e.target.value }))}
                 style={inp}
               />
             </label>
