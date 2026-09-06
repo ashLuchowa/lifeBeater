@@ -108,9 +108,29 @@ a:hover { color: #444; }
 /* A column needs roughly 200px before the pill and the figure beside it stop
    fitting. Between 1025 and 1280 the dashboard middle column is not wide enough
    for three, so drop to two and let Net Worth span underneath. */
+/* Net Worth panel: a square that sizes off its own column width, held at the
+   top of the grid row rather than stretched to match Assets / Liabilities. */
+.networth-card {
+  align-self: start;
+  aspect-ratio: 1 / 1;
+}
+
 @media (max-width: 1280px) {
   .assets-grid { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
   .assets-grid > :last-child { grid-column: 1 / -1; }
+  /* Full width down here — a 1:1 box would be enormous, so let it be content-tall,
+     and lift it above Assets / Liabilities instead of trailing underneath. */
+  .networth-card { aspect-ratio: auto; order: -1; min-height: 172px; }
+  /* With the panel wide, give the figure the space between the label and the
+     bar and centre it there, much larger than the cramped desktop column allows. */
+  .networth-value {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: clamp(44px, 13vw, 60px);
+    line-height: 1;
+  }
 }
 
 /* Scales with the viewport so a seven-figure net worth cannot push past its

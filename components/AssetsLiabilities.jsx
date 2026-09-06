@@ -129,7 +129,12 @@ export default function AssetsLiabilities() {
             </div>
           ))}
 
-          <div style={{ borderRadius: 14, padding: 13, background: "#14150f", color: "#fff", display: "flex", flexDirection: "column", justifyContent: "space-between", gap: 10, minWidth: 0 }}>
+          {/* Square (height tracks its own width) and pinned to the top of its
+              grid row, so the Net Worth panel keeps a steady shape instead of
+              stretching with however many rows the Assets and Liabilities lists
+              happen to have. Below 1280px it spans full width, where the CSS
+              drops the aspect ratio. */}
+          <div className="networth-card" style={{ borderRadius: 14, padding: 13, background: "#14150f", color: "#fff", display: "flex", flexDirection: "column", justifyContent: "space-between", gap: 10, minWidth: 0 }}>
             <div style={{ display: "flex", alignItems: "center" }}>
               <div style={{ padding: "5px 9px", borderRadius: 8, background: "rgba(255,255,255,0.12)", fontSize: 10, fontWeight: 700, whiteSpace: "nowrap" }}>
                 Net Worth
