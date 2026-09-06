@@ -138,7 +138,11 @@ export function useLedger(fy) {
   // sends the whole ledger, the way snapshots do — these are small documents.
   const commit = useCallback(
     (next) => {
-      setPast((p) => [...p, ledgerRef.current].slice(-HISTORY_LIMIT));
+      // Snapshot the ref now — applyLedger below reassigns it synchronously,
+      // and the setPast updater only runs at flush, by which point it would
+      // otherwise read the new state instead of the one being replaced.
+      const prev = ledgerRef.current;
+      setPast((p) => [...p, prev].slice(-HISTORY_LIMIT));
       setFuture([]);
       applyLedger(next);
       persist(next);
@@ -154,18 +158,20 @@ export function useLedger(fy) {
 
   const undo = useCallback(() => {
     if (!past.length) return;
+    const current = ledgerRef.current; // capture before applyLedger reassigns it
     const restored = past[past.length - 1];
     setPast((p) => p.slice(0, -1));
-    setFuture((f) => [ledgerRef.current, ...f].slice(0, HISTORY_LIMIT));
+    setFuture((f) => [current, ...f].slice(0, HISTORY_LIMIT));
     applyLedger(restored);
     persist(restored);
   }, [past, applyLedger, persist]);
 
   const redo = useCallback(() => {
     if (!future.length) return;
+    const current = ledgerRef.current; // capture before applyLedger reassigns it
     const restored = future[0];
     setFuture((f) => f.slice(1));
-    setPast((p) => [...p, ledgerRef.current].slice(-HISTORY_LIMIT));
+    setPast((p) => [...p, current].slice(-HISTORY_LIMIT));
     applyLedger(restored);
     persist(restored);
   }, [future, applyLedger, persist]);
