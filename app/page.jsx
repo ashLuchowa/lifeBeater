@@ -1,6 +1,7 @@
 import { AuthProvider } from "@/components/AuthProvider";
 import AppShell from "@/components/AppShell";
 import { DashboardDataProvider } from "@/components/DashboardData";
+import ProjectedIncomeSync from "@/components/ProjectedIncomeSync";
 import DayTransition from "@/components/DayTransition";
 import ComingSoon from "@/components/ComingSoon";
 import TopBar from "@/components/TopBar";
@@ -20,6 +21,7 @@ export default function Page() {
       <AppShell>
         <main className="dashboard-main">
           <DashboardDataProvider>
+            <ProjectedIncomeSync />
             <div className="dashboard-panel">
               <TopBar>
                 <DayNav />

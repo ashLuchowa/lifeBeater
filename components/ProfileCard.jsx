@@ -2,6 +2,8 @@
 
 import { useEffect, useState } from "react";
 import { useDashboardData } from "./DashboardData";
+import { formatMoney } from "@/lib/money";
+import { fyLabelShort } from "@/lib/ledger";
 import { TitlePill } from "./ui";
 import { PencilIcon } from "./icons";
 import ComingSoon from "./ComingSoon";
@@ -91,6 +93,14 @@ export default function ProfileCard() {
     setDraft(null);
   };
 
+  // Rough full-year income estimate, kept on each week's snapshot by
+  // ProjectedIncomeSync. Absent or zero on weeks saved before any income was
+  // recorded — hidden in that case.
+  const projectedIncome = Number(data.projectedIncome) || 0;
+  const projectedLabel = data.projectedIncomeFy
+    ? `Projected ${fyLabelShort(data.projectedIncomeFy)} income`
+    : "Projected FY income";
+
   return (
     <>
       <div style={{ background: "#14150f", color: "#fff", borderRadius: 18, padding: 16, display: "flex", flexDirection: "column", gap: 13 }}>
@@ -116,6 +126,17 @@ export default function ProfileCard() {
             <PencilIcon color="#fff" size={12} />
           </button>
         </div>
+
+        {projectedIncome > 0 && (
+          <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", gap: 8, padding: "9px 11px", borderRadius: 10, background: "rgba(255,255,255,0.06)" }}>
+            <span style={{ fontSize: 9, fontWeight: 700, letterSpacing: "0.05em", textTransform: "uppercase", opacity: 0.55 }}>
+              {projectedLabel}
+            </span>
+            <span style={{ fontSize: 14, fontWeight: 800, letterSpacing: "-0.02em", color: "#f0b323", whiteSpace: "nowrap" }}>
+              {formatMoney(projectedIncome)}
+            </span>
+          </div>
+        )}
 
         <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
           <div style={{ fontSize: 9.5, fontWeight: 700, letterSpacing: "0.06em", textTransform: "uppercase", opacity: 0.55 }}>
