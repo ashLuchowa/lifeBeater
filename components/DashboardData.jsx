@@ -36,6 +36,11 @@ export function DashboardDataProvider({ children }) {
     selectedRef.current = selectedWeek;
   }, [selectedWeek]);
 
+  // True only once we've actually read this user's rows from Supabase. Until
+  // then `snapshots` is empty for lack of data, not because there is none — so
+  // no write path may run, or it would persist seed-based data over real rows.
+  const loadedRef = useRef(false);
+
   // Point the transition the right way, then move.
   const goTo = useCallback((target) => {
     const cur = selectedRef.current;
@@ -47,27 +52,49 @@ export function DashboardDataProvider({ children }) {
   useEffect(() => {
     if (!userId) return;
     let cancelled = false;
+
+    // Read the user's rows, retrying a few times. The first PostgREST request
+    // after a page load can race the auth-token refresh and come back 401 with
+    // an otherwise-valid session; a bare failure here used to drop us to seed
+    // data and (worse) let the carry-forward write that seed back. So force a
+    // token refresh first, then retry before giving up.
+    const fetchRows = async () => {
+      await supabase.auth.getSession();
+      let lastError = null;
+      for (let attempt = 0; attempt < 4; attempt++) {
+        const { data, error } = await supabase
+          .from("snapshots")
+          .select("week_start, data")
+          .eq("user_id", userId);
+        if (cancelled) return { rows: null, ok: false };
+        if (!error) return { rows: data, ok: true };
+        lastError = error;
+        await new Promise((r) => setTimeout(r, 500 * (attempt + 1)));
+        if (cancelled) return { rows: null, ok: false };
+      }
+      console.error("Failed to load snapshots", lastError);
+      return { rows: null, ok: false };
+    };
+
     (async () => {
-      const { data, error } = await supabase.from("snapshots").select("week_start, data").eq("user_id", userId);
+      const { rows, ok } = await fetchRows();
       if (cancelled) return;
 
       let map = {};
-      if (error) {
-        console.error("Failed to load snapshots", error);
-      } else {
-        for (const row of data) map[row.week_start] = row.data;
+      if (ok) {
+        for (const row of rows) map[row.week_start] = row.data;
       }
 
       // Guarantee the current week has its own row, carrying forward whatever
       // was true as of the last saved week — so every week you actually open
       // the app ends up with a real snapshot for later charting.
       //
-      // Only when the load actually succeeded: on error `map` is empty and does
-      // not reflect the database, so writing seed data here would overwrite a
-      // real snapshot we merely failed to read. `ignoreDuplicates` is a second
+      // Only when the load actually succeeded: on failure `map` is empty and
+      // does not reflect the database, so writing seed data here would overwrite
+      // a real snapshot we merely failed to read. `ignoreDuplicates` is a second
       // guard — this write must never replace an existing row.
       const w = thisWeek();
-      if (!error && !(w in map)) {
+      if (ok && !(w in map)) {
         const carried = resolveForDate(map, w, seedData).data;
         map = { ...map, [w]: carried };
         supabase
@@ -81,13 +108,38 @@ export function DashboardDataProvider({ children }) {
           });
       }
 
-      setSnapshots(map);
+      // Keep whatever we already had on a failed reload rather than blanking to
+      // seed; only replace state when the read actually succeeded.
+      if (ok) {
+        setSnapshots(map);
+        loadedRef.current = true;
+      }
       setToday(todayStr());
       setCurrentWeek(w);
       setSelectedWeek(w);
     })();
+
+    // A token refresh landing after a failed first load should heal it. Once the
+    // read has succeeded there's nothing to recover, so stay quiet.
+    const { data: sub } = supabase.auth.onAuthStateChange((event) => {
+      if (!loadedRef.current && (event === "TOKEN_REFRESHED" || event === "SIGNED_IN")) {
+        supabase
+          .from("snapshots")
+          .select("week_start, data")
+          .eq("user_id", userId)
+          .then(({ data, error }) => {
+            if (cancelled || error || !data) return;
+            const map = {};
+            for (const row of data) map[row.week_start] = row.data;
+            setSnapshots((prev) => ({ ...map, ...prev }));
+            loadedRef.current = true;
+          });
+      }
+    });
+
     return () => {
       cancelled = true;
+      sub.subscription.unsubscribe();
     };
   }, [supabase, userId]);
 
@@ -125,7 +177,10 @@ export function DashboardDataProvider({ children }) {
   // object, or a function receiving a deep copy of the currently effective data.
   const updateData = useCallback(
     (updater) => {
-      if (!selectedWeek || !userId) return;
+      // Refuse to write until the initial read has succeeded: `prev` would
+      // otherwise be an empty map, `resolveForDate` would hand back seed data,
+      // and we'd persist a seed-based row over a real one we never loaded.
+      if (!selectedWeek || !userId || !loadedRef.current) return;
       setSnapshots((prev) => {
         const current = resolveForDate(prev, selectedWeek, seedData).data;
         const nextWeek =
