@@ -230,7 +230,10 @@ export default function ProfileCard() {
             </label>
 
             <div style={{ display: "flex", gap: 10 }}>
-              <label style={{ ...field, flex: 1 }}>
+              {/* minWidth: 0 overrides the flex item's default "auto" minimum,
+                  which would otherwise floor at the input's intrinsic width and
+                  push Country past the modal's edge on a narrow screen. */}
+              <label style={{ ...field, flex: 1, minWidth: 0 }}>
                 <span style={fieldLabel}>City</span>
                 <input
                   value={draft.city}
@@ -240,7 +243,7 @@ export default function ProfileCard() {
                 />
               </label>
 
-              <label style={{ ...field, flex: 1 }}>
+              <label style={{ ...field, flex: 1, minWidth: 0 }}>
                 <span style={fieldLabel}>Country</span>
                 <input
                   value={draft.country}
@@ -272,6 +275,7 @@ const fieldLabel = {
 };
 
 const inp = {
+  width: "100%",
   border: "1px solid #e4e7de",
   borderRadius: 9,
   padding: "9px 11px",
