@@ -1,6 +1,6 @@
 "use client";
 
-import { Fragment, useEffect, useState } from "react";
+import { Fragment, useEffect, useRef, useState } from "react";
 import { LedgerHead, LedgerRow, LedgerSection, LedgerScroller, LedgerGap, LedgerAddRow } from "./LedgerTable";
 import { useLedger } from "./LedgerData";
 import CellEditor from "./CellEditor";
@@ -20,7 +20,7 @@ import {
 // fall out of the same numbers.
 export default function LedgerBoard({ fy }) {
   const {
-    ledger, loading, saving, error,
+    ledger, saving, error,
     setValue, setLabel, addRow, removeRow,
     setIncomeValue, setSourceLabel, addSource, removeSource,
     undo, redo, canUndo, canRedo,
@@ -147,8 +147,9 @@ export default function LedgerBoard({ fy }) {
         ))}
       </div>
 
+      <SavedToast saving={saving} error={error} />
+
       <div className="ledger-toolbar">
-        <SaveState loading={loading} saving={saving} error={error} />
         <div className="ledger-toolbar-actions">
           <button type="button" className="ledger-btn" onClick={undo} disabled={!canUndo}>
             Undo
@@ -284,9 +285,30 @@ export default function LedgerBoard({ fy }) {
   );
 }
 
-function SaveState({ loading, saving, error }) {
-  if (error) return <span className="ledger-hint" style={{ background: "#fbd9da", color: "#8f3b40" }}>Not saved</span>;
-  if (loading) return <span className="ledger-hint">Loading…</span>;
-  if (saving) return <span className="ledger-hint">Saving…</span>;
-  return <span className="ledger-hint">Saved</span>;
+// The toolbar's old permanent "Saved"/"Saving…" label is gone — this is the
+// only save feedback now. Pops up bottom-right on the trailing edge of a save
+// (saving going true -> false) and fades itself back out a few seconds later;
+// stays silent on the initial load and on every render in between. A failed
+// save reads "Not saved" in the error colour and lingers longer, since that
+// one is worth actually noticing.
+function SavedToast({ saving, error }) {
+  const [state, setState] = useState(null); // null | "saved" | "error"
+  const wasSaving = useRef(false);
+  const timerRef = useRef(null);
+
+  useEffect(() => {
+    if (wasSaving.current && !saving) {
+      setState(error ? "error" : "saved");
+      clearTimeout(timerRef.current);
+      timerRef.current = setTimeout(() => setState(null), error ? 3200 : 1800);
+    }
+    wasSaving.current = saving;
+  }, [saving, error]);
+
+  useEffect(() => () => clearTimeout(timerRef.current), []);
+
+  const isError = state === "error";
+  const className =
+    "save-toast" + (state ? " save-toast--visible" : "") + (isError ? " save-toast--error" : "");
+  return <div className={className}>{isError ? "Not saved" : "Saved"}</div>;
 }

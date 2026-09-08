@@ -73,6 +73,7 @@ a:hover { color: #444; }
   .day-layer { animation: none !important; }
   .day-layer--out-fwd,
   .day-layer--out-back { display: none; }
+  .save-toast { transition: none; }
 }
 
 .dashboard-body {
@@ -420,7 +421,9 @@ a:hover { color: #444; }
 .ledger-toolbar {
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  /* Undo/Redo is the toolbar's only child now that the old save label is
+     gone — space-between had nothing left to space, so it sat at the left. */
+  justify-content: flex-end;
   gap: 8px;
   flex-wrap: wrap;
 }
@@ -490,6 +493,32 @@ a:hover { color: #444; }
   font-weight: 700;
   white-space: nowrap;
 }
+
+/* Bottom-right confirmation toast for a completed save. Sits fixed to the
+   viewport (not the card) so it reads the same regardless of scroll
+   position, and fades on both ways in rather than popping. */
+.save-toast {
+  position: fixed;
+  right: 20px;
+  bottom: 20px;
+  z-index: 200;
+  padding: 10px 18px;
+  border-radius: 999px;
+  background: #14150f;
+  color: #fff;
+  font-size: 12px;
+  font-weight: 700;
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.18);
+  opacity: 0;
+  transform: translateY(8px);
+  pointer-events: none;
+  transition: opacity 0.25s ease, transform 0.25s ease;
+}
+.save-toast--visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+.save-toast--error { background: #fbd9da; color: #8f3b40; }
 
 .ledger-scroller {
   overflow-x: auto;
