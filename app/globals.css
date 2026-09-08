@@ -738,3 +738,17 @@ a:hover { color: #444; }
   .ledger-summary { grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); }
   .ledger-summary-value { font-size: 20px; }
 }
+
+@media (max-width: 420px) {
+  /* The label column is fixed-width (never grows for a long typed name — the
+     input inside is `flex:1; min-width:0`), so shrinking it here just hands
+     the freed space to the heat-map cells instead of leaving them scrolled
+     out of view behind the sticky label. */
+  .ledger-row { grid-template-columns: 84px repeat(12, minmax(60px, 1fr)) 104px 58px; }
+  .ledger-cell--label { padding: 7px 8px; font-size: 10px; }
+
+  /* Icon only — "Add fixed cost" etc. no longer fits next to a narrower label
+     column. The text stays for screen readers via aria-label. */
+  .ledger-add-row { width: 32px; height: 32px; padding: 0; }
+  .ledger-add-row__label { display: none; }
+}

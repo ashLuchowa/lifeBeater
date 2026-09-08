@@ -248,14 +248,16 @@ export function LedgerRow({ label, values, entries, family, pct, emphasis, cellT
 }
 
 // Full-width dashed button that sits under a group's rows. On narrow screens
-// it shrinks to a compact pill (see the 1215px rule in globals.css) rather
-// than stretching the full width of the horizontally-scrolling grid.
+// it shrinks to a compact pill, then to an icon-only circle on phones (see the
+// 1215px/420px rules in globals.css) rather than stretching the full width of
+// the horizontally-scrolling grid.
 export function LedgerAddRow({ onClick, children }) {
+  const label = typeof children === "string" ? children : undefined;
   return (
     <div className="ledger-row">
-      <button type="button" className="ledger-add-row" onClick={onClick}>
+      <button type="button" className="ledger-add-row" onClick={onClick} aria-label={label}>
         <PlusIcon size={11} color="#5c6156" />
-        {children}
+        <span className="ledger-add-row__label">{children}</span>
       </button>
     </div>
   );

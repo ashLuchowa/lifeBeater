@@ -224,8 +224,11 @@ export default function LedgerBoard({ fy }) {
                     onSetValue={(month, value) => setIncomeValue(si, ri, month, value)}
                   />
                 ))}
+                {/* Just "Total" — the source's own name is already the section
+                    header right above these rows, so repeating it here only
+                    eats into the label column's fixed width for nothing. */}
                 <LedgerRow
-                  label={(src.label || "Source") + " Total"}
+                  label="Total"
                   values={sourceCols[si]}
                   family="cool"
                   pct={share(sum(sourceCols[si]), incomeTotal)}
