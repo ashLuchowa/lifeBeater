@@ -17,7 +17,6 @@ export default function DayNav() {
     canGoNext,
     canGoPrev,
     earliestWeek,
-    snapshotWeeks,
     today,
     goToPrevWeek,
     goToNextWeek,
@@ -58,7 +57,6 @@ export default function DayNav() {
             today={today}
             minDate={earliestWeek}
             weekMode
-            marked={snapshotWeeks}
             onSelect={goToDate}
             onClose={() => setPickerOpen(false)}
           />

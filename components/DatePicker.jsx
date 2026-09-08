@@ -4,33 +4,45 @@ import { useState } from "react";
 import { fromStr, toStr, weekStart } from "@/lib/snapshots";
 import { ArrowLeftIcon, ArrowRightIcon } from "./icons";
 
-const DOW = ["S", "M", "T", "W", "T", "F", "S"];
+// Monday-first, matching the app's Monday-to-Sunday week (see lib/snapshots.js).
+const DOW = ["M", "T", "W", "T", "F", "S", "S"];
 const MONTHS = [
   "January", "February", "March", "April", "May", "June",
   "July", "August", "September", "October", "November", "December",
 ];
 
-export default function DatePicker({ value, initialMonth, today, minDate, marked = [], allowFuture = false, weekMode = false, onSelect, onClose }) {
+export default function DatePicker({ value, initialMonth, today, minDate, allowFuture = false, weekMode = false, onSelect, onClose }) {
   // Opens on the selected day, else on the month the caller cares about (a
   // ledger cell opens on its own month), else on the real today.
   const anchor = value ? fromStr(value) : initialMonth ? fromStr(initialMonth) : new Date();
   const [view, setView] = useState({ y: anchor.getFullYear(), m: anchor.getMonth() });
-  const markedSet = new Set(marked);
+  // Day string currently under the cursor, for the hover highlight. In week mode
+  // the highlight covers the whole week that day belongs to.
+  const [hovered, setHovered] = useState(null);
+  const hoverKey = hovered == null ? null : weekMode ? weekStart(hovered) : hovered;
 
-  const startDow = new Date(view.y, view.m, 1).getDay();
+  // Weekday of the 1st, counted from Monday (0 = Mon … 6 = Sun).
+  const startDow = (new Date(view.y, view.m, 1).getDay() + 6) % 7;
   const daysInMonth = new Date(view.y, view.m + 1, 0).getDate();
 
+  // Fill the grid with real days: the trailing days of the previous month lead
+  // in, then this month, then the leading days of the next month finish the last
+  // week. Out-of-month cells are dimmed but still selectable.
   const cells = [];
-  for (let i = 0; i < startDow; i++) cells.push(null);
-  for (let d = 1; d <= daysInMonth; d++) cells.push(d);
+  const prevMonthDays = new Date(view.y, view.m, 0).getDate();
+  for (let i = startDow - 1; i >= 0; i--) {
+    cells.push({ y: view.y, m: view.m - 1, d: prevMonthDays - i, outside: true });
+  }
+  for (let d = 1; d <= daysInMonth; d++) cells.push({ y: view.y, m: view.m, d, outside: false });
+  for (let d = 1; cells.length % 7 !== 0; d++) {
+    cells.push({ y: view.y, m: view.m + 1, d, outside: true });
+  }
 
   const shiftMonth = (delta) =>
     setView((v) => {
       const nd = new Date(v.y, v.m + delta, 1);
       return { y: nd.getFullYear(), m: nd.getMonth() };
     });
-
-  const cellStr = (d) => toStr(new Date(view.y, view.m, d));
 
   // Don't let the view page into months that are entirely in the future,
   // unless the caller is picking a future date (bill due dates).
@@ -72,21 +84,28 @@ export default function DatePicker({ value, initialMonth, today, minDate, marked
         </div>
 
         <div style={{ display: "grid", gridTemplateColumns: "repeat(7, 1fr)", gap: 2 }}>
-          {cells.map((d, i) => {
-            if (d === null) return <div key={i} />;
-            const s = cellStr(d);
+          {cells.map((c, i) => {
+            const s = toStr(new Date(c.y, c.m, c.d));
             // In week mode the value is a Monday, so every day of that week reads
-            // as selected and every day of a saved week carries the dot.
+            // as selected.
             const key = weekMode ? weekStart(s) : s;
             const isSelected = key === value;
             const isToday = s === today;
-            const isFuture = !allowFuture && today && s > today;
-            const blocked = isFuture || (minDate && s < minDate);
+            // Range limits apply per week in week mode (picking any day of a week
+            // picks that week), so a future day inside the current week is fine —
+            // only whole weeks past this one or before minDate are out of range.
+            const bound = weekMode ? key : s;
+            const futureLimit = weekMode && today ? weekStart(today) : today;
+            const isFuture = !allowFuture && today && bound > futureLimit;
+            const blocked = isFuture || (minDate && bound < minDate);
+            const isHovered = !blocked && !isSelected && hoverKey === key;
             return (
               <button
                 key={i}
                 type="button"
                 disabled={blocked}
+                onMouseEnter={() => setHovered(s)}
+                onMouseLeave={() => setHovered((h) => (h === s ? null : h))}
                 onClick={() => {
                   onSelect(s);
                   onClose();
@@ -99,26 +118,13 @@ export default function DatePicker({ value, initialMonth, today, minDate, marked
                   cursor: blocked ? "not-allowed" : "pointer",
                   fontSize: 11.5,
                   fontWeight: 700,
-                  background: isSelected ? "#14150f" : "transparent",
-                  color: isSelected ? "#fff" : "#14150f",
+                  background: isSelected ? "#14150f" : isHovered ? "#ecefe6" : "transparent",
+                  color: isSelected ? "#fff" : c.outside ? "#b3b7a9" : "#14150f",
                   opacity: blocked ? 0.28 : 1,
+                  transition: "background 0.12s ease",
                 }}
               >
-                {d}
-                {markedSet.has(key) && (
-                  <span
-                    style={{
-                      position: "absolute",
-                      bottom: 3,
-                      left: "50%",
-                      transform: "translateX(-50%)",
-                      width: 4,
-                      height: 4,
-                      borderRadius: "50%",
-                      background: isSelected ? "#fff" : "#e0a92a",
-                    }}
-                  />
-                )}
+                {c.d}
               </button>
             );
           })}
