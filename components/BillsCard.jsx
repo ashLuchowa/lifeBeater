@@ -134,9 +134,12 @@ export default function BillsCard() {
           // Amber, but darkened from the #e0a92a dot: at 9.5px on #f6faf2 the raw
           // dot colour reads fainter than the muted text it is meant to outrank.
           const dueColor = pastDue ? "#dd6f74" : dueSoon ? "#a8791a" : "#8a8f83";
+          // Traffic light: red once overdue, orange while it falls due this week,
+          // green when it is still further out. Undated rows stay neutral amber.
+          const dotColor = !dated ? "#e0a92a" : pastDue ? "#dd6f74" : dueSoon ? "#e0a92a" : "#4a9c68";
           return (
             <div key={i} style={{ display: "flex", alignItems: "center", gap: 9, background: "#f6faf2", border: "1px solid #eaf0e2", borderRadius: 11, padding: "10px 12px" }}>
-              <span style={{ width: 7, height: 7, borderRadius: "50%", background: "#e0a92a", flex: "none", display: "block" }} />
+              <span style={{ width: 7, height: 7, borderRadius: "50%", background: dotColor, flex: "none", display: "block" }} />
               <div style={{ flex: 1, minWidth: 0 }}>
                 <div style={{ fontSize: 11.5, fontWeight: 700, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{b.name}</div>
                 <div style={{ fontSize: 9.5, fontWeight: 600, color: dueColor, marginTop: 1, whiteSpace: "nowrap" }}>
