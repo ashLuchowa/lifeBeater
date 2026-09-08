@@ -2,6 +2,7 @@
 
 import { useRef, useState } from "react";
 import { months, sum, cellAmount } from "@/lib/ledger";
+import { PlusIcon } from "./icons";
 
 // Heat-map tint mirrors the spreadsheet: red family for costs, green for income.
 const tint = (family, alpha) =>
@@ -246,12 +247,15 @@ export function LedgerRow({ label, values, entries, family, pct, emphasis, cellT
   );
 }
 
-// Full-width dashed button that sits under a group's rows.
+// Full-width dashed button that sits under a group's rows. On narrow screens
+// it shrinks to a compact pill (see the 1215px rule in globals.css) rather
+// than stretching the full width of the horizontally-scrolling grid.
 export function LedgerAddRow({ onClick, children }) {
   return (
     <div className="ledger-row">
       <button type="button" className="ledger-add-row" onClick={onClick}>
-        + {children}
+        <PlusIcon size={11} color="#5c6156" />
+        {children}
       </button>
     </div>
   );

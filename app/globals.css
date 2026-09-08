@@ -651,6 +651,9 @@ a:hover { color: #444; }
 
 .ledger-add-row {
   grid-column: 1 / -1;
+  display: flex;
+  align-items: center;
+  gap: 5px;
   margin: 5px 0;
   padding: 6px 10px;
   border-radius: 9px;
@@ -710,6 +713,25 @@ a:hover { color: #444; }
 }
 
 .ledger-net-bar { height: 100%; border-radius: 999px; }
+
+/* The dashed bar reads oddly once the grid has to scroll: it spans the full
+   1000px-wide row, so most of it sits off-screen. A compact pill sitting at
+   the row's left edge — where the sticky label column already lives — looks
+   like a normal button and needs no horizontal scroll to use. 1215px is
+   roughly where the ledger card's own width drops below that 1000px grid. */
+@media (max-width: 1215px) {
+  .ledger-add-row {
+    position: sticky;
+    left: 0;
+    z-index: 2;
+    width: fit-content;
+    justify-content: center;
+    border-radius: 999px;
+    border-style: solid;
+    background: #fff;
+    padding: 7px 13px;
+  }
+}
 
 @media (max-width: 720px) {
   .ledger-card { padding: 12px; border-radius: 14px; }
