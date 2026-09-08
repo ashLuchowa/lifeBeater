@@ -47,7 +47,7 @@ export default function DayNav() {
         <button
           type="button"
           onClick={() => setPickerOpen((o) => !o)}
-          className="nav-pill"
+          className="nav-pill nav-pill--week"
         >
           {dateLabel}
         </button>

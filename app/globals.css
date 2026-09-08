@@ -226,6 +226,19 @@ a:hover { color: #444; }
   cursor: pointer;
 }
 
+/* The week-range pill: a fixed footprint sized like the "This week" button, so
+   the label ("7 – 13 Sep, 2026" vs "31 Aug – 6 Sep, 2026") never shifts the
+   arrows around as you step through weeks. */
+.nav-pill--week {
+  width: 176px;
+  max-width: 100%;
+  padding: 8px 12px;
+  font-size: 13px;
+  text-align: center;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
 /* "This week" / "This FY": outlined, filling in when you are already there. */
 .nav-cta {
   padding: 8px 17px;
@@ -324,6 +337,7 @@ a:hover { color: #444; }
   .assets-grid { grid-template-columns: 1fr; }
   .topbar-actions { flex-wrap: wrap; row-gap: 8px; }
   .nav-pill { padding: 10px 15px; font-size: 14px; }
+  .nav-pill--week { padding: 7px 12px; font-size: 13px; width: 168px; }
   .nav-cta { padding: 7px 13px; font-size: 12px; }
   /* Anchored left instead, or a 258px panel runs off a narrow screen. */
   .nav-popover { left: 0; right: auto; }
@@ -335,6 +349,7 @@ a:hover { color: #444; }
   .dashboard-main { padding: 8px; }
   .dashboard-panel { padding: 10px; border-radius: 12px; }
   .nav-pill { padding: 9px 12px; font-size: 12.5px; }
+  .nav-pill--week { font-size: 12px; width: 150px; }
 }
 
 /*---------- LEDGER (Income / Expense page) ----------*/
