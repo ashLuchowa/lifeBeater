@@ -413,6 +413,8 @@ a:hover { color: #444; }
   opacity: 0.66;
   margin-top: 2px;
   white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .ledger-toolbar {

@@ -91,8 +91,19 @@ export default function LedgerBoard({ fy }) {
   // the colour" idiom as an Assets & Liabilities item row. Net Position is
   // already dark, so its figure sits directly on it, same as the Net Worth
   // card on the dashboard.
+  // "Bus driving, Uber (gross) and Other income" — built from whatever income
+  // sources actually exist, so renaming or deleting one updates this on its own
+  // instead of a caption that drifts from the real sources.
+  const sourceLabels = incomeSources.map((s) => s.label.trim()).filter(Boolean);
+  const incomeNote =
+    sourceLabels.length === 0
+      ? "No income sources yet"
+      : sourceLabels.length === 1
+        ? sourceLabels[0]
+        : `${sourceLabels.slice(0, -1).join(", ")} and ${sourceLabels[sourceLabels.length - 1]}`;
+
   const summary = [
-    { label: "Total Income", value: "$" + cellAmount(incomeTotal), note: "Main, side and other", bg: "#dff1e4", fg: "#14150f", chip: "#fff", dot: "#4a9c68", light: true },
+    { label: "Total Income", value: "$" + cellAmount(incomeTotal), note: incomeNote, bg: "#dff1e4", fg: "#14150f", chip: "#fff", dot: "#4a9c68", light: true },
     { label: "Total Expenses", value: "$" + cellAmount(expenseTotal), note: "Fixed and variable", bg: "#fbd9da", fg: "#14150f", chip: "#fff", dot: "#dd6f74", light: true },
     { label: "Net Position", value: signedAmount(net), note: pctOfIncome, bg: "#14150f", fg: "#fff", chip: "rgba(255,255,255,0.12)", dot: "#e0a92a" },
     { label: "Avg Monthly Net", value: signedAmount(net / 12), note: "Across 12 months", bg: "#fbecc4", fg: "#14150f", chip: "#fff", dot: "#e0a92a", light: true },
