@@ -151,7 +151,6 @@ export default function LedgerBoard({ fy }) {
       <section className="ledger-card">
         <header className="ledger-card-head">
           <div className="ledger-title">Expenses</div>
-          <span className="ledger-hint">Scroll for months →</span>
         </header>
 
         <LedgerScroller>
@@ -172,7 +171,6 @@ export default function LedgerBoard({ fy }) {
       <section className="ledger-card">
         <header className="ledger-card-head">
           <div className="ledger-title">Income</div>
-          <span className="ledger-hint">Scroll for months →</span>
         </header>
 
         <LedgerScroller>
