@@ -5,7 +5,7 @@ import { useDashboardData } from "./DashboardData";
 import { TitlePill } from "./ui";
 import { PencilIcon, PlusIcon } from "./icons";
 import { formatMoney, parseMoney } from "@/lib/money";
-import { formatShort } from "@/lib/snapshots";
+import { addDays, formatShort } from "@/lib/snapshots";
 import DatePicker from "./DatePicker";
 
 const clone = (o) => JSON.parse(JSON.stringify(o));
@@ -125,11 +125,13 @@ export default function BillsCard() {
           // Urgency as of the week being viewed, not the real today — every other
           // card shows what was true in its own week, so this one should too.
           // Overdue means it fell due before this week began; soon means it falls
-          // due somewhere inside it. Keys are YYYY-MM-DD, so string ordering is
-          // date ordering.
+          // due somewhere inside it, plus a few days' grace past the week's end —
+          // a bill due the Monday right after is just as "coming up" as one due
+          // inside it; only the calendar happens to file it under a different
+          // week. Keys are YYYY-MM-DD, so string ordering is date ordering.
           const dated = b.dueDate && selectedWeek;
           const pastDue = dated && b.dueDate < selectedWeek;
-          const dueSoon = dated && !pastDue && b.dueDate <= selectedWeekEnd;
+          const dueSoon = dated && !pastDue && b.dueDate <= addDays(selectedWeekEnd, 3);
           const dueText = pastDue ? dueLabel(b.dueDate) : dueSoon ? `Soon ${formatShort(b.dueDate)}` : b.due;
           // Amber, but darkened from the #e0a92a dot: at 9.5px on #f6faf2 the raw
           // dot colour reads fainter than the muted text it is meant to outrank.
