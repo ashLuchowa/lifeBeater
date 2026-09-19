@@ -227,9 +227,12 @@ a:hover { color: #444; }
   cursor: pointer;
 }
 
-/* The week-range pill: a fixed footprint sized like the "This week" button, so
-   the label ("7 – 13 Sep, 2026" vs "31 Aug – 6 Sep, 2026") never shifts the
-   arrows around as you step through weeks. */
+/* The compact nav pill: a fixed footprint sized like the "This week"/"This FY"
+   button, so a shorter or longer label — the week range on the dashboard
+   ("7 – 13 Sep, 2026" vs "31 Aug – 6 Sep, 2026"), or the financial year on the
+   ledger page ("FY 2026–27") — never shifts its own arrows, and the top bar
+   is the same height on every page instead of the plain, much larger
+   .nav-pill this shrinks down from. */
 .nav-pill--week {
   width: 176px;
   max-width: 100%;

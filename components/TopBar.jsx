@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { HomeIcon, LedgerIcon, BarsIcon, LogOutIcon, MenuIcon } from "./icons";
+import { LogOutIcon, MenuIcon } from "./icons";
 import { useAuth } from "./AuthProvider";
 import { navArrowBtn } from "./ui";
 
@@ -31,15 +31,12 @@ export default function TopBar({ children }) {
   const links = (
     <>
       <Link href="/" className={onHome ? "topbar-link topbar-link--active" : "topbar-link"}>
-        <HomeIcon color={onHome ? "#fff" : "#14150f"} />
         Home
       </Link>
       <Link href="/assets-liabilities" className={onPortfolio ? "topbar-link topbar-link--active" : "topbar-link"}>
-        <LedgerIcon color={onPortfolio ? "#fff" : "#14150f"} />
         Assets &amp; Liabilities
       </Link>
       <Link href="/income-expense" className={onLedger ? "topbar-link topbar-link--active" : "topbar-link"}>
-        <BarsIcon color={onLedger ? "#fff" : "#14150f"} />
         Income / Expense
       </Link>
     </>

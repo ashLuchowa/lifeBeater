@@ -32,9 +32,14 @@ export function LedgerIcon({ size = 15, color = "#14150f" }) {
 
 export function BarsIcon({ size = 15, color = "#14150f" }) {
   return (
+    // Shifted up 2 units from the more obvious "bars sitting on a baseline"
+    // drawing: that version's ink ran from y=8 to the y=20 baseline, centred
+    // at 14 rather than the viewBox's true centre (12) — off just enough that
+    // the label next to it read as riding a little low compared to the Home
+    // and Assets & Liabilities icons either side of it in the nav.
     <svg width={size} height={size} viewBox="0 0 24 24" stroke={color} {...strokeProps}>
-      <path d="M7 17V9M12 17v-5M17 17v-9" />
-      <path d="M4 20h16" />
+      <path d="M7 15V7M12 15v-5M17 15v-9" />
+      <path d="M4 18h16" />
     </svg>
   );
 }

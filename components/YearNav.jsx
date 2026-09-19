@@ -55,7 +55,7 @@ export default function YearNav({ fy, currentFy }) {
           type="button"
           onClick={() => setOpen((o) => !o)}
           aria-label="Choose or start a financial year"
-          className="nav-pill"
+          className="nav-pill nav-pill--week"
         >
           {fyLabel(fy)}
         </button>
