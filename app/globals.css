@@ -668,6 +668,13 @@ a:hover { color: #444; }
   height: 17px;
   flex: none;
   margin-left: 4px;
+  padding: 0;
+  /* Flex-centred rather than relying on the button's default text layout —
+     the UA stylesheet's own padding isn't symmetric in every browser, which
+     left the × glyph looking off-centre. */
+  display: flex;
+  align-items: center;
+  justify-content: center;
   border-radius: 5px;
   border: 1px solid #eaded9;
   background: #fff;
@@ -989,22 +996,32 @@ a:hover { color: #444; }
   white-space: nowrap;
 }
 
+/* Same square-chip design, size and hover-reveal as the ledger's row-delete
+   button (.ledger-row-del) rather than a circle sitting permanently on the
+   page, so the delete affordance reads the same across the whole app. */
 .pf-del {
-  width: 26px;
-  height: 26px;
+  width: 17px;
+  height: 17px;
   flex: none;
-  border: 1px solid #e4e7de;
-  border-radius: 50%;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid #eaded9;
+  border-radius: 5px;
   background: #fff;
   color: #dd6f74;
-  font-size: 15px;
-  line-height: 1;
   font-family: inherit;
   cursor: pointer;
+  opacity: 0;
+  transition: opacity 0.15s ease;
 }
+.pf-row-head:hover .pf-del,
+.pf-tr:hover .pf-del,
+.pf-del:focus-visible { opacity: 1; }
 .pf-del--cell {
-  width: 22px;
-  height: 22px;
+  width: 15px;
+  height: 15px;
   border: none;
   background: none;
   color: #8a8f83;
