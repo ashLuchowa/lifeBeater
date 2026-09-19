@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useDashboardData } from "./DashboardData";
-import { TitlePill } from "./ui";
+import { ConfirmDialog, TitlePill } from "./ui";
 import { PlusIcon } from "./icons";
 import { formatMoney } from "@/lib/money";
 import {
@@ -516,7 +516,8 @@ export default function PortfolioBoard() {
 
     {confirmTarget && (
       <ConfirmDialog
-        name={confirmTarget.name}
+        title={`Delete ${confirmTarget.name || "this"}?`}
+        body="You can Undo this right after, but it's gone from the page the moment you confirm."
         onCancel={() => setConfirmTarget(null)}
         onConfirm={confirmDelete}
       />
@@ -524,66 +525,6 @@ export default function PortfolioBoard() {
     </>
   );
 }
-
-// Undo covers a change of mind after the fact; this catches the mis-click
-// before it happens — the two are meant to back each other up, not replace
-// one another.
-function ConfirmDialog({ name, onCancel, onConfirm }) {
-  return (
-    <div
-      onMouseDown={(e) => e.target === e.currentTarget && onCancel()}
-      style={{
-        position: "fixed",
-        inset: 0,
-        zIndex: 100,
-        background: "rgba(20,21,15,0.45)",
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        padding: "5vh 16px",
-      }}
-    >
-      <div style={{ width: "min(360px, 100%)", background: "#fff", borderRadius: 18, padding: 18, display: "flex", flexDirection: "column", gap: 14 }}>
-        <div style={{ fontSize: 14, fontWeight: 800 }}>Delete {name || "this"}?</div>
-        <div style={{ fontSize: 11.5, fontWeight: 600, color: "#8a8f83", lineHeight: 1.5 }}>
-          You can Undo this right after, but it's gone from the page the moment you confirm.
-        </div>
-        <div style={{ display: "flex", justifyContent: "flex-end", gap: 8 }}>
-          <button type="button" onClick={onCancel} style={btnGhost}>
-            Cancel
-          </button>
-          <button type="button" onClick={onConfirm} style={btnDanger}>
-            Delete
-          </button>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-const btnGhost = {
-  padding: "7px 13px",
-  borderRadius: 999,
-  border: "1px solid #d7ddcf",
-  background: "#fff",
-  fontSize: 12,
-  fontWeight: 700,
-  fontFamily: "inherit",
-  color: "#14150f",
-  cursor: "pointer",
-};
-
-const btnDanger = {
-  padding: "7px 15px",
-  borderRadius: 999,
-  border: "1px solid #dd6f74",
-  background: "#dd6f74",
-  color: "#fff",
-  fontSize: 12,
-  fontWeight: 700,
-  fontFamily: "inherit",
-  cursor: "pointer",
-};
 
 function Field({ label, value, onChange, placeholder, type = "text", step, grow = 1 }) {
   return (

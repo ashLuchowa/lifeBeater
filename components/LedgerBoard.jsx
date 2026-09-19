@@ -4,6 +4,7 @@ import { Fragment, useEffect, useRef, useState } from "react";
 import { LedgerHead, LedgerRow, LedgerSection, LedgerScroller, LedgerGap, LedgerAddRow } from "./LedgerTable";
 import { useLedger } from "./LedgerData";
 import CellEditor from "./CellEditor";
+import { ConfirmDialog } from "./ui";
 import {
   months,
   columnTotals,
@@ -33,6 +34,17 @@ export default function LedgerBoard({ fy }) {
   // snapshot. `family` ("warm" cost / "cool" income) carries the grid's own
   // colour language into the modal.
   const [openCell, setOpenCell] = useState(null);
+
+  // A pending "delete this?" confirmation: { name, onConfirm } or null. Undo
+  // covers a change of mind after the fact; this catches the mis-click before
+  // it happens — removing a whole fixed/variable cost row or income source is
+  // the one destructive action here without a dedicated form to re-check first.
+  const [confirmTarget, setConfirmTarget] = useState(null);
+  const askDelete = (name, onConfirm) => setConfirmTarget({ name, onConfirm });
+  const confirmDelete = () => {
+    confirmTarget?.onConfirm();
+    setConfirmTarget(null);
+  };
 
   // Open the breakdown modal for a cell. If the cell still holds a plain typed
   // figure (no lines), fold that figure into its first line on the way in, so
@@ -124,7 +136,7 @@ export default function LedgerBoard({ fy }) {
       ? (month) => openBreakdown({ group: key, row: i }, month, row.label, "warm")
       : undefined,
     onSetLabel: (label) => setLabel(key, i, label),
-    onRemove: () => removeRow(key, i),
+    onRemove: () => askDelete(row.label || "this row", () => removeRow(key, i)),
   });
 
   const fixedRows = fixedCost.map(editable("fixedCost", "warm", expenseTotal, false));
@@ -132,6 +144,19 @@ export default function LedgerBoard({ fy }) {
 
   return (
     <>
+      <SavedToast saving={saving} error={error} />
+
+      <div className="ledger-toolbar">
+        <div className="ledger-toolbar-actions">
+          <button type="button" className="ledger-btn" onClick={undo} disabled={!canUndo}>
+            Undo
+          </button>
+          <button type="button" className="ledger-btn" onClick={redo} disabled={!canRedo}>
+            Redo
+          </button>
+        </div>
+      </div>
+
       <div className="ledger-summary">
         {summary.map((s) => (
           <div key={s.label} className="ledger-summary-card" style={{ background: s.bg, color: s.fg }}>
@@ -145,19 +170,6 @@ export default function LedgerBoard({ fy }) {
             </div>
           </div>
         ))}
-      </div>
-
-      <SavedToast saving={saving} error={error} />
-
-      <div className="ledger-toolbar">
-        <div className="ledger-toolbar-actions">
-          <button type="button" className="ledger-btn" onClick={undo} disabled={!canUndo}>
-            Undo
-          </button>
-          <button type="button" className="ledger-btn" onClick={redo} disabled={!canRedo}>
-            Redo
-          </button>
-        </div>
       </div>
 
       <section className="ledger-card">
@@ -211,7 +223,7 @@ export default function LedgerBoard({ fy }) {
                   label={src.label}
                   placeholder="Income source"
                   onSetLabel={(label) => setSourceLabel(si, label)}
-                  onRemove={() => removeSource(si)}
+                  onRemove={() => askDelete(src.label || "this income source", () => removeSource(si))}
                 />
                 {src.rows.map((row, ri) => (
                   <LedgerRow
@@ -279,6 +291,14 @@ export default function LedgerBoard({ fy }) {
           onSetEntry={(i, field, v) => setEntry(openCell.loc, openCell.month, i, field, v)}
           onRemoveEntry={(i) => removeEntry(openCell.loc, openCell.month, i)}
           onClose={() => setOpenCell(null)}
+        />
+      )}
+      {confirmTarget && (
+        <ConfirmDialog
+          title={`Delete ${confirmTarget.name || "this"}?`}
+          body="You can Undo this right after, but it's gone from the grid the moment you confirm."
+          onCancel={() => setConfirmTarget(null)}
+          onConfirm={confirmDelete}
         />
       )}
     </>
