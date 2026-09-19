@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useDashboardData } from "./DashboardData";
 import { TitlePill } from "./ui";
 import { PlusIcon } from "./icons";
@@ -20,6 +20,17 @@ import {
   stockTotals,
 } from "@/lib/portfolio";
 
+// Crossed lines rather than the × text glyph — a font's × is rarely centred
+// in its own em box, which is what kept these delete buttons looking off no
+// matter how the button itself was centred. An SVG path is centred exactly.
+function XIcon({ size = 11 }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.4} strokeLinecap="round">
+      <path d="M5 5l14 14M19 5L5 19" />
+    </svg>
+  );
+}
+
 const clone = (o) => JSON.parse(JSON.stringify(o));
 const signed = (n) => (n < 0 ? "-" : "+") + formatMoney(Math.abs(n)).replace("-", "");
 const precise = (n) => "$" + (n || 0).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
@@ -28,6 +39,9 @@ const plBg = (v) => (v < 0 ? "#fbd9da" : v > 0 ? "#dff1e4" : "#f4f7ef");
 const emptyHolding = { ticker: "", name: "", shares: "", avgCost: "", price: "", fees: "" };
 const emptyAsset = { kind: SIMPLE, name: "", value: "", cost: "" };
 const emptyLiability = { name: "", balance: "", original: "", rate: "", payment: "" };
+
+// How many steps back Undo can reach. Mirrors the Income / Expense ledger.
+const HISTORY_LIMIT = 50;
 
 export default function PortfolioBoard() {
   const { data, selectedWeek, updateData } = useDashboardData();
@@ -42,9 +56,30 @@ export default function PortfolioBoard() {
   const [holdingFor, setHoldingFor] = useState(null);
   const [holding, setHolding] = useState(emptyHolding);
 
+  // A pending "delete this?" confirmation: { kind, name, onConfirm } or null.
+  const [confirmTarget, setConfirmTarget] = useState(null);
+
+  // Undo/redo history, same shape as the ledger's: two stacks of whole
+  // portfolio snapshots. `portfolio` is derived from context, not local state,
+  // so a ref keeps undo/redo reading the latest value rather than one closed
+  // over at the render their button was clicked from.
+  const [past, setPast] = useState([]);
+  const [future, setFuture] = useState([]);
+  const portfolioRef = useRef(portfolio);
+  useEffect(() => {
+    portfolioRef.current = portfolio;
+  }, [portfolio]);
+
+  // A different week is a different document — its own history, not a
+  // continuation of whatever you were undoing a moment ago.
+  useEffect(() => {
+    setPast([]);
+    setFuture([]);
+  }, [selectedWeek]);
+
   // One write path: save the records, then rebuild the card's ledgers and
   // netWorth from them so the dashboard cannot drift from this page.
-  const commit = (next) =>
+  const applyPortfolio = (next) =>
     updateData((d) => {
       d.portfolio = next;
       d.ledgers = ledgersFromPortfolio(next);
@@ -52,7 +87,40 @@ export default function PortfolioBoard() {
       return d;
     });
 
+  const commit = (next) => {
+    setPast((p) => [...p, portfolioRef.current].slice(-HISTORY_LIMIT));
+    setFuture([]);
+    applyPortfolio(next);
+  };
+
+  const undo = () => {
+    if (!past.length) return;
+    const current = portfolioRef.current;
+    const restored = past[past.length - 1];
+    setPast((p) => p.slice(0, -1));
+    setFuture((f) => [current, ...f].slice(0, HISTORY_LIMIT));
+    applyPortfolio(restored);
+  };
+
+  const redo = () => {
+    if (!future.length) return;
+    const current = portfolioRef.current;
+    const restored = future[0];
+    setFuture((f) => f.slice(1));
+    setPast((p) => [...p, current].slice(-HISTORY_LIMIT));
+    applyPortfolio(restored);
+  };
+
   const toggle = (id) => setOpen((o) => ({ ...o, [id]: !o[id] }));
+
+  // Every delete goes through a confirmation instead of firing immediately —
+  // undo covers a change of mind, but the prompt catches the mis-click
+  // before it happens at all.
+  const askDelete = (name, onConfirm) => setConfirmTarget({ name, onConfirm });
+  const confirmDelete = () => {
+    confirmTarget?.onConfirm();
+    setConfirmTarget(null);
+  };
 
   const addAsset = () => {
     if (!assetForm?.name.trim()) return;
@@ -143,7 +211,19 @@ export default function PortfolioBoard() {
   ];
 
   return (
-    <div className="pf-board">
+    <>
+      <div className="pf-board">
+      <div className="ledger-toolbar">
+        <div className="ledger-toolbar-actions">
+          <button type="button" className="ledger-btn" onClick={undo} disabled={!past.length}>
+            Undo
+          </button>
+          <button type="button" className="ledger-btn" onClick={redo} disabled={!future.length}>
+            Redo
+          </button>
+        </div>
+      </div>
+
       <div className="pf-summary">
         <div className="pf-networth">
           <div className="pf-card-top">
@@ -266,7 +346,7 @@ export default function PortfolioBoard() {
                   </span>
                 )}
                 <span className="pf-row-value">{formatMoney(value)}</span>
-                <button type="button" className="pf-del" onClick={() => removeAsset(a.id)} aria-label={`Delete ${a.name}`}>&times;</button>
+                <button type="button" className="pf-del" onClick={() => askDelete(a.name, () => removeAsset(a.id))} aria-label={`Delete ${a.name}`}><XIcon /></button>
               </div>
 
               {isOpen && isStock && (
@@ -301,7 +381,7 @@ export default function PortfolioBoard() {
                               <span>{signed(ht.pl)}</span>
                               <span className="pf-pl-pct">{ht.cost ? ht.plPct.toFixed(1) + "%" : "—"}</span>
                             </div>
-                            <button type="button" className="pf-del pf-del--cell" onClick={() => removeHolding(a.id, h.id)} aria-label={`Delete ${h.ticker}`}>&times;</button>
+                            <button type="button" className="pf-del pf-del--cell" onClick={() => askDelete(h.ticker, () => removeHolding(a.id, h.id))} aria-label={`Delete ${h.ticker}`}><XIcon size={10} /></button>
                           </div>
                         );
                       })}
@@ -409,7 +489,7 @@ export default function PortfolioBoard() {
                 </button>
                 <span className="pf-chip pf-chip--quiet">{(d.paid * 100).toFixed(0)}% repaid</span>
                 <span className="pf-row-value">{formatMoney(l.balance || 0)}</span>
-                <button type="button" className="pf-del" onClick={() => removeLiability(l.id)} aria-label={`Delete ${l.name}`}>&times;</button>
+                <button type="button" className="pf-del" onClick={() => askDelete(l.name, () => removeLiability(l.id))} aria-label={`Delete ${l.name}`}><XIcon /></button>
               </div>
 
               <div className="pf-track">
@@ -433,8 +513,77 @@ export default function PortfolioBoard() {
         <p className="pf-footnote">Prices are entered by hand · saved to week of {selectedWeek || "…"}</p>
       </section>
     </div>
+
+    {confirmTarget && (
+      <ConfirmDialog
+        name={confirmTarget.name}
+        onCancel={() => setConfirmTarget(null)}
+        onConfirm={confirmDelete}
+      />
+    )}
+    </>
   );
 }
+
+// Undo covers a change of mind after the fact; this catches the mis-click
+// before it happens — the two are meant to back each other up, not replace
+// one another.
+function ConfirmDialog({ name, onCancel, onConfirm }) {
+  return (
+    <div
+      onMouseDown={(e) => e.target === e.currentTarget && onCancel()}
+      style={{
+        position: "fixed",
+        inset: 0,
+        zIndex: 100,
+        background: "rgba(20,21,15,0.45)",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        padding: "5vh 16px",
+      }}
+    >
+      <div style={{ width: "min(360px, 100%)", background: "#fff", borderRadius: 18, padding: 18, display: "flex", flexDirection: "column", gap: 14 }}>
+        <div style={{ fontSize: 14, fontWeight: 800 }}>Delete {name || "this"}?</div>
+        <div style={{ fontSize: 11.5, fontWeight: 600, color: "#8a8f83", lineHeight: 1.5 }}>
+          You can Undo this right after, but it's gone from the page the moment you confirm.
+        </div>
+        <div style={{ display: "flex", justifyContent: "flex-end", gap: 8 }}>
+          <button type="button" onClick={onCancel} style={btnGhost}>
+            Cancel
+          </button>
+          <button type="button" onClick={onConfirm} style={btnDanger}>
+            Delete
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+const btnGhost = {
+  padding: "7px 13px",
+  borderRadius: 999,
+  border: "1px solid #d7ddcf",
+  background: "#fff",
+  fontSize: 12,
+  fontWeight: 700,
+  fontFamily: "inherit",
+  color: "#14150f",
+  cursor: "pointer",
+};
+
+const btnDanger = {
+  padding: "7px 15px",
+  borderRadius: 999,
+  border: "1px solid #dd6f74",
+  background: "#dd6f74",
+  color: "#fff",
+  fontSize: 12,
+  fontWeight: 700,
+  fontFamily: "inherit",
+  cursor: "pointer",
+};
 
 function Field({ label, value, onChange, placeholder, type = "text", step, grow = 1 }) {
   return (
