@@ -545,20 +545,20 @@ export default function PortfolioBoard() {
 
         {portfolio.liabilities.map((l) => {
           const d = liabilityDerived(l);
-          const isOpen = !!open[l.id];
+          // Balance, Original and Rate already sit in this row or the edit
+          // form — the only figures that had nowhere else to live were how
+          // much of the payment is interest, and when it's paid off. Folded
+          // into one chip rather than a click-to-reveal panel, same as assets.
+          const payoffLabel = d.monthsLeft ? d.monthsLeft + " mo left" : "no payoff date";
           return (
             <article key={l.id} className="pf-row">
               <div className="pf-row-head">
-                <button type="button" className="pf-caret pf-caret--liab" onClick={() => toggle(l.id)} aria-label="Toggle details" aria-expanded={isOpen}>
-                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#14150f" strokeWidth={2.4} strokeLinecap="round" strokeLinejoin="round" style={{ transform: isOpen ? "rotate(180deg)" : "none" }}>
-                    <path d="M6 10l6 5 6-5" />
-                  </svg>
-                </button>
-                <button type="button" className="pf-row-name" onClick={() => toggle(l.id)}>
+                <div className="pf-row-name" style={{ cursor: "default" }}>
                   <span className="pf-row-title">{l.name}</span>
                   <span className="pf-row-sub">{l.note}</span>
-                </button>
+                </div>
                 <span className="pf-chip pf-chip--quiet">{(d.paid * 100).toFixed(0)}% repaid</span>
+                <span className="pf-chip pf-chip--quiet">{formatMoney(d.interest)}/mo interest · {payoffLabel}</span>
                 <span className="pf-row-value">{formatMoney(l.balance || 0)}</span>
                 <button type="button" className="pf-edit" onClick={() => editLiability(l)} aria-label={`Edit ${l.name}`}><PencilIcon size={9} /></button>
                 <button type="button" className="pf-del" onClick={() => askDelete(l.name, () => removeLiability(l.id))} aria-label={`Delete ${l.name}`}><XIcon /></button>
@@ -577,20 +577,9 @@ export default function PortfolioBoard() {
                     <Field label="Original" type="number" placeholder="0" value={liabForm.original} onChange={(v) => setLiabForm((f) => ({ ...f, original: v }))} />
                     <Field label="Rate %" type="number" step="0.01" placeholder="0.00" value={liabForm.rate} onChange={(v) => setLiabForm((f) => ({ ...f, rate: v }))} />
                     <Field label="Monthly" type="number" placeholder="0" value={liabForm.payment} onChange={(v) => setLiabForm((f) => ({ ...f, payment: v }))} />
-                    <button type="button" className="pf-btn pf-btn--solid" onClick={saveLiability}>Save</button>
+                          <button type="button" className="pf-btn pf-btn--solid" onClick={saveLiability}>Save</button>
                     <button type="button" className="pf-btn" onClick={() => setLiabForm(null)}>Cancel</button>
                   </div>
-                </div>
-              )}
-
-              {isOpen && (
-                <div className="pf-facts">
-                  <Fact label="Balance" value={formatMoney(l.balance || 0)} />
-                  <Fact label="Original" value={formatMoney(l.original || 0)} />
-                  <Fact label="Rate" value={(l.rate || 0).toFixed(2) + "%"} />
-                  <Fact label="Monthly" value={formatMoney(l.payment || 0)} />
-                  <Fact label="Interest / mo" value={precise(d.interest)} />
-                  <Fact label="Payoff" value={d.monthsLeft ? d.monthsLeft + " mo" : "No end date"} />
                 </div>
               )}
             </article>
@@ -627,14 +616,5 @@ function Field({ label, value, onChange, placeholder, type = "text", step, grow 
         onChange={(e) => onChange(e.target.value)}
       />
     </label>
-  );
-}
-
-function Fact({ label, value }) {
-  return (
-    <div className="pf-fact">
-      <div className="pf-fact-label">{label}</div>
-      <div className="pf-fact-value">{value}</div>
-    </div>
   );
 }
