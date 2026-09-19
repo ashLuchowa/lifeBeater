@@ -996,9 +996,11 @@ a:hover { color: #444; }
   white-space: nowrap;
 }
 
-/* Same square-chip design, size and hover-reveal as the ledger's row-delete
-   button (.ledger-row-del) rather than a circle sitting permanently on the
-   page, so the delete affordance reads the same across the whole app. */
+/* Same square-chip design as the ledger's row-delete button (.ledger-row-del)
+   rather than a circle, so the delete affordance reads the same across the
+   whole app. Always visible here (not hover-revealed) — with two of these
+   per row/holding, fading both in left an empty gap before you hovered that
+   looked broken rather than deliberate. */
 .pf-del {
   width: 17px;
   height: 17px;
@@ -1013,13 +1015,34 @@ a:hover { color: #444; }
   color: #dd6f74;
   font-family: inherit;
   cursor: pointer;
-  opacity: 0;
-  transition: opacity 0.15s ease;
 }
-.pf-row-head:hover .pf-del,
-.pf-tr:hover .pf-del,
-.pf-del:focus-visible { opacity: 1; }
 .pf-del--cell {
+  width: 15px;
+  height: 15px;
+  border: none;
+  background: none;
+  color: #8a8f83;
+  align-self: center;
+}
+
+/* Same chip as .pf-del, sitting right next to it — dark/neutral rather than
+   red. Always visible, same as .pf-del. */
+.pf-edit {
+  width: 17px;
+  height: 17px;
+  flex: none;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid #eaded9;
+  border-radius: 5px;
+  background: #fff;
+  color: #14150f;
+  font-family: inherit;
+  cursor: pointer;
+}
+.pf-edit--cell {
   width: 15px;
   height: 15px;
   border: none;
@@ -1043,13 +1066,22 @@ a:hover { color: #444; }
 .pf-scroller::-webkit-scrollbar-thumb { background: #cfd6c6; border-radius: 99px; }
 .pf-scroller::-webkit-scrollbar-track { background: transparent; }
 
-.pf-table { min-width: 760px; display: flex; flex-direction: column; gap: 4px; }
+.pf-table { min-width: 782px; display: flex; flex-direction: column; gap: 4px; }
 
 .pf-tr {
   display: grid;
-  grid-template-columns: 104px 68px 84px 84px 68px 96px 104px 28px;
+  grid-template-columns: 104px 68px 84px 84px 68px 96px 104px 50px;
   gap: 4px;
   align-items: stretch;
+}
+
+/* Holds the holding row's edit + delete buttons side by side in that last
+   narrow column, right-aligned the way the lone delete button used to sit. */
+.pf-td-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 4px;
 }
 
 .pf-tr--head > div {
@@ -1079,7 +1111,7 @@ a:hover { color: #444; }
 .pf-td--quiet { color: #8a8f83; }
 .pf-td--strong { font-weight: 800; }
 .pf-td--dark { background: #14150f; color: #fff; border-radius: 10px; padding: 8px 9px; font-weight: 800; }
-.pf-td--span { grid-column: span 4; font-size: 9.5px; font-weight: 700; opacity: 0.72; }
+.pf-td--span { grid-column: span 6; font-size: 9.5px; font-weight: 700; opacity: 0.72; }
 
 .pf-num { text-align: right; }
 

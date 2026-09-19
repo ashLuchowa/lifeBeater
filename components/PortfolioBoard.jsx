@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useDashboardData } from "./DashboardData";
 import { ConfirmDialog, TitlePill } from "./ui";
-import { PlusIcon } from "./icons";
+import { PencilIcon, PlusIcon } from "./icons";
 import { formatMoney } from "@/lib/money";
 import {
   SIMPLE,
@@ -122,44 +122,86 @@ export default function PortfolioBoard() {
     setConfirmTarget(null);
   };
 
-  const addAsset = () => {
+  // assetForm carries an `id` when it is editing an existing row rather than
+  // building a new one — the same form, and the same save handler, serve both
+  // the top-of-section "Add asset" flow and the inline "Edit" on a row.
+  const editAsset = (a) =>
+    setAssetForm(
+      a.kind === STOCKS
+        ? { id: a.id, kind: STOCKS, name: a.name }
+        : { id: a.id, kind: SIMPLE, name: a.name, value: String(a.value ?? ""), cost: String(a.cost ?? "") },
+    );
+
+  const saveAsset = () => {
     if (!assetForm?.name.trim()) return;
-    const row =
-      assetForm.kind === STOCKS
-        ? { id: newId(), kind: STOCKS, name: assetForm.name.trim(), note: "Investment account", holdings: [] }
-        : {
-            id: newId(),
-            kind: SIMPLE,
-            name: assetForm.name.trim(),
-            note: "Added manually",
-            value: Number(assetForm.value) || 0,
-            cost: Number(assetForm.cost) || 0,
-          };
-    commit({ ...clone(portfolio), assets: [...portfolio.assets, row] });
+    const isStock = assetForm.kind === STOCKS;
+    const fields = isStock
+      ? { name: assetForm.name.trim() }
+      : { name: assetForm.name.trim(), value: Number(assetForm.value) || 0, cost: Number(assetForm.cost) || 0 };
+
+    if (assetForm.id) {
+      commit({
+        ...clone(portfolio),
+        assets: portfolio.assets.map((a) => (a.id === assetForm.id ? { ...a, ...fields } : a)),
+      });
+    } else {
+      const row = isStock
+        ? { id: newId(), kind: STOCKS, note: "Investment account", holdings: [], ...fields }
+        : { id: newId(), kind: SIMPLE, note: "Added manually", ...fields };
+      commit({ ...clone(portfolio), assets: [...portfolio.assets, row] });
+    }
     setAssetForm(null);
   };
 
-  const addLiability = () => {
+  const editLiability = (l) =>
+    setLiabForm({
+      id: l.id,
+      name: l.name,
+      balance: String(l.balance ?? ""),
+      original: String(l.original ?? ""),
+      rate: String(l.rate ?? ""),
+      payment: String(l.payment ?? ""),
+    });
+
+  const saveLiability = () => {
     if (!liabForm?.name.trim()) return;
     const balance = Number(liabForm.balance) || 0;
-    const row = {
-      id: newId(),
+    const fields = {
       name: liabForm.name.trim(),
-      note: "Added manually",
       balance,
       original: Number(liabForm.original) || balance,
       rate: Number(liabForm.rate) || 0,
       payment: Number(liabForm.payment) || 0,
     };
-    commit({ ...clone(portfolio), liabilities: [...portfolio.liabilities, row] });
+
+    if (liabForm.id) {
+      commit({
+        ...clone(portfolio),
+        liabilities: portfolio.liabilities.map((l) => (l.id === liabForm.id ? { ...l, ...fields } : l)),
+      });
+    } else {
+      commit({ ...clone(portfolio), liabilities: [...portfolio.liabilities, { id: newId(), note: "Added manually", ...fields }] });
+    }
     setLiabForm(null);
   };
 
-  const addHolding = () => {
+  const editHolding = (assetId, h) => {
+    setHoldingFor(assetId);
+    setHolding({
+      id: h.id,
+      ticker: h.ticker,
+      name: h.name,
+      shares: String(h.shares ?? ""),
+      avgCost: String(h.avgCost ?? ""),
+      price: String(h.price ?? ""),
+      fees: String(h.fees ?? ""),
+    });
+  };
+
+  const saveHolding = () => {
     if (!holdingFor || !holding.ticker.trim()) return;
     const ticker = holding.ticker.trim().toUpperCase();
-    const row = {
-      id: newId(),
+    const fields = {
       ticker,
       name: holding.name.trim() || ticker,
       shares: Number(holding.shares) || 0,
@@ -169,7 +211,13 @@ export default function PortfolioBoard() {
     };
     commit({
       ...clone(portfolio),
-      assets: portfolio.assets.map((a) => (a.id === holdingFor ? { ...a, holdings: [...a.holdings, row] } : a)),
+      assets: portfolio.assets.map((a) => {
+        if (a.id !== holdingFor) return a;
+        if (holding.id) {
+          return { ...a, holdings: a.holdings.map((h) => (h.id === holding.id ? { ...h, ...fields } : h)) };
+        }
+        return { ...a, holdings: [...a.holdings, { id: newId(), ...fields }] };
+      }),
     });
     setHoldingFor(null);
     setHolding(emptyHolding);
@@ -285,7 +333,7 @@ export default function PortfolioBoard() {
           </button>
         </header>
 
-        {assetForm && (
+        {assetForm && !assetForm.id && (
           <div className="pf-form pf-form--asset">
             <div className="pf-form-head">
               <span className="pf-form-title">New asset</span>
@@ -313,7 +361,7 @@ export default function PortfolioBoard() {
                   <Field label="Paid / cost" type="number" placeholder="0" value={assetForm.cost} onChange={(v) => setAssetForm((f) => ({ ...f, cost: v }))} />
                 </>
               )}
-              <button type="button" className="pf-btn pf-btn--solid" onClick={addAsset}>Add</button>
+              <button type="button" className="pf-btn pf-btn--solid" onClick={saveAsset}>Add</button>
               <button type="button" className="pf-btn" onClick={() => setAssetForm(null)}>Cancel</button>
             </div>
           </div>
@@ -326,28 +374,53 @@ export default function PortfolioBoard() {
           const isStock = a.kind === STOCKS;
           const st = isStock ? stockTotals(a) : null;
           const isOpen = !!open[a.id];
+          // Simple assets have nowhere left to expand to — value, cost and
+          // change already sit in this row (or the edit form), and this was
+          // the one figure that didn't: fold it into the chip that used to
+          // just say "Holding" instead of a click-to-reveal facts panel.
+          const shareLabel = totals.assets ? ((value / totals.assets) * 100).toFixed(1) + "% of assets" : "—";
 
           return (
             <article key={a.id} className="pf-row">
               <div className="pf-row-head">
-                <button type="button" className="pf-caret pf-caret--asset" onClick={() => toggle(a.id)} aria-label="Toggle details" aria-expanded={isOpen}>
-                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#14150f" strokeWidth={2.4} strokeLinecap="round" strokeLinejoin="round" style={{ transform: isOpen ? "rotate(180deg)" : "none" }}>
-                    <path d="M6 10l6 5 6-5" />
-                  </svg>
-                </button>
-                <button type="button" className="pf-row-name" onClick={() => toggle(a.id)}>
+                {isStock && (
+                  <button type="button" className="pf-caret pf-caret--asset" onClick={() => toggle(a.id)} aria-label="Toggle details" aria-expanded={isOpen}>
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#14150f" strokeWidth={2.4} strokeLinecap="round" strokeLinejoin="round" style={{ transform: isOpen ? "rotate(180deg)" : "none" }}>
+                      <path d="M6 10l6 5 6-5" />
+                    </svg>
+                  </button>
+                )}
+                <button type="button" className="pf-row-name" onClick={isStock ? () => toggle(a.id) : undefined} style={isStock ? undefined : { cursor: "default" }}>
                   <span className="pf-row-title">{a.name}</span>
                   <span className="pf-row-sub">{a.note}</span>
                 </button>
-                <span className="pf-chip pf-chip--quiet">{isStock ? "Investments" : "Holding"}</span>
+                <span className="pf-chip pf-chip--quiet">{isStock ? "Investments" : shareLabel}</span>
                 {cost > 0 && (
                   <span className="pf-pl" style={{ background: plBg(pl) }}>
                     {signed(pl)} · {((pl / cost) * 100).toFixed(1)}%
                   </span>
                 )}
                 <span className="pf-row-value">{formatMoney(value)}</span>
+                <button type="button" className="pf-edit" onClick={() => editAsset(a)} aria-label={`Edit ${a.name}`}><PencilIcon size={9} /></button>
                 <button type="button" className="pf-del" onClick={() => askDelete(a.name, () => removeAsset(a.id))} aria-label={`Delete ${a.name}`}><XIcon /></button>
               </div>
+
+              {assetForm?.id === a.id && (
+                <div className="pf-form pf-form--asset">
+                  <span className="pf-form-title">Edit asset</span>
+                  <div className="pf-fields">
+                    <Field label="Name" placeholder="e.g. Brokerage" value={assetForm.name} onChange={(v) => setAssetForm((f) => ({ ...f, name: v }))} grow={1.6} />
+                    {assetForm.kind === SIMPLE && (
+                      <>
+                        <Field label="Current value" type="number" placeholder="0" value={assetForm.value} onChange={(v) => setAssetForm((f) => ({ ...f, value: v }))} />
+                        <Field label="Paid / cost" type="number" placeholder="0" value={assetForm.cost} onChange={(v) => setAssetForm((f) => ({ ...f, cost: v }))} />
+                      </>
+                    )}
+                    <button type="button" className="pf-btn pf-btn--solid" onClick={saveAsset}>Save</button>
+                    <button type="button" className="pf-btn" onClick={() => setAssetForm(null)}>Cancel</button>
+                  </div>
+                </div>
+              )}
 
               {isOpen && isStock && (
                 <div className="pf-row-body">
@@ -381,21 +454,26 @@ export default function PortfolioBoard() {
                               <span>{signed(ht.pl)}</span>
                               <span className="pf-pl-pct">{ht.cost ? ht.plPct.toFixed(1) + "%" : "—"}</span>
                             </div>
-                            <button type="button" className="pf-del pf-del--cell" onClick={() => askDelete(h.ticker, () => removeHolding(a.id, h.id))} aria-label={`Delete ${h.ticker}`}><XIcon size={10} /></button>
+                            <div className="pf-td-actions">
+                              <button type="button" className="pf-edit pf-edit--cell" onClick={() => editHolding(a.id, h)} aria-label={`Edit ${h.ticker}`}><PencilIcon size={8} /></button>
+                              <button type="button" className="pf-del pf-del--cell" onClick={() => askDelete(h.ticker, () => removeHolding(a.id, h.id))} aria-label={`Delete ${h.ticker}`}><XIcon size={10} /></button>
+                            </div>
                           </div>
                         );
                       })}
 
                       {a.holdings.length === 0 && <div className="pf-empty">No holdings yet</div>}
 
+                      {/* Value and P/L already sit in the row header above (and stay
+                          per-holding here) — repeating the account-wide figures in
+                          this row too was the same duplication the asset cards had,
+                          so Total now only carries what isn't shown anywhere else. */}
                       {a.holdings.length > 0 && (
                         <div className="pf-tr pf-tr--total">
                           <div className="pf-td pf-td--dark">Total</div>
                           <div className="pf-td pf-td--dark pf-td--span pf-num">
                             {a.holdings.length} holdings · cost {formatMoney(st.cost)} · fees {precise(st.fees)}
                           </div>
-                          <div className="pf-td pf-td--dark pf-num">{formatMoney(st.value)}</div>
-                          <div className="pf-td pf-num pf-td--strong" style={{ background: plBg(pl) }}>{signed(pl)}</div>
                           <div />
                         </div>
                       )}
@@ -404,6 +482,7 @@ export default function PortfolioBoard() {
 
                   {holdingFor === a.id && (
                     <div className="pf-form pf-form--holding">
+                      <span className="pf-form-title">{holding.id ? "Edit holding" : "New holding"}</span>
                       <div className="pf-fields">
                         <Field label="Ticker" placeholder="AIR" value={holding.ticker} onChange={(v) => setHolding((h) => ({ ...h, ticker: v }))} />
                         <Field label="Name" placeholder="Company" value={holding.name} onChange={(v) => setHolding((h) => ({ ...h, name: v }))} grow={1.4} />
@@ -411,7 +490,7 @@ export default function PortfolioBoard() {
                         <Field label="Avg cost" type="number" step="0.01" placeholder="0.00" value={holding.avgCost} onChange={(v) => setHolding((h) => ({ ...h, avgCost: v }))} />
                         <Field label="Price" type="number" step="0.01" placeholder="0.00" value={holding.price} onChange={(v) => setHolding((h) => ({ ...h, price: v }))} />
                         <Field label="Fees" type="number" step="0.01" placeholder="0.00" value={holding.fees} onChange={(v) => setHolding((h) => ({ ...h, fees: v }))} />
-                        <button type="button" className="pf-btn pf-btn--solid" onClick={addHolding}>Save</button>
+                        <button type="button" className="pf-btn pf-btn--solid" onClick={saveHolding}>Save</button>
                         <button type="button" className="pf-btn" onClick={() => setHoldingFor(null)}>Cancel</button>
                       </div>
                     </div>
@@ -431,14 +510,6 @@ export default function PortfolioBoard() {
                 </div>
               )}
 
-              {isOpen && !isStock && (
-                <div className="pf-facts">
-                  <Fact label="Current value" value={formatMoney(a.value || 0)} />
-                  <Fact label="Paid" value={formatMoney(a.cost || 0)} />
-                  <Fact label="Change" value={signed(pl)} />
-                  <Fact label="Share of assets" value={totals.assets ? ((value / totals.assets) * 100).toFixed(1) + "%" : "—"} />
-                </div>
-              )}
             </article>
           );
         })}
@@ -457,7 +528,7 @@ export default function PortfolioBoard() {
           </button>
         </header>
 
-        {liabForm && (
+        {liabForm && !liabForm.id && (
           <div className="pf-form pf-form--liab">
             <span className="pf-form-title">New liability</span>
             <div className="pf-fields">
@@ -466,7 +537,7 @@ export default function PortfolioBoard() {
               <Field label="Original" type="number" placeholder="0" value={liabForm.original} onChange={(v) => setLiabForm((f) => ({ ...f, original: v }))} />
               <Field label="Rate %" type="number" step="0.01" placeholder="0.00" value={liabForm.rate} onChange={(v) => setLiabForm((f) => ({ ...f, rate: v }))} />
               <Field label="Monthly" type="number" placeholder="0" value={liabForm.payment} onChange={(v) => setLiabForm((f) => ({ ...f, payment: v }))} />
-              <button type="button" className="pf-btn pf-btn--solid" onClick={addLiability}>Add</button>
+              <button type="button" className="pf-btn pf-btn--solid" onClick={saveLiability}>Add</button>
               <button type="button" className="pf-btn" onClick={() => setLiabForm(null)}>Cancel</button>
             </div>
           </div>
@@ -489,12 +560,28 @@ export default function PortfolioBoard() {
                 </button>
                 <span className="pf-chip pf-chip--quiet">{(d.paid * 100).toFixed(0)}% repaid</span>
                 <span className="pf-row-value">{formatMoney(l.balance || 0)}</span>
+                <button type="button" className="pf-edit" onClick={() => editLiability(l)} aria-label={`Edit ${l.name}`}><PencilIcon size={9} /></button>
                 <button type="button" className="pf-del" onClick={() => askDelete(l.name, () => removeLiability(l.id))} aria-label={`Delete ${l.name}`}><XIcon /></button>
               </div>
 
               <div className="pf-track">
                 <div style={{ width: d.paid * 100 + "%" }} />
               </div>
+
+              {liabForm?.id === l.id && (
+                <div className="pf-form pf-form--liab">
+                  <span className="pf-form-title">Edit liability</span>
+                  <div className="pf-fields">
+                    <Field label="Name" placeholder="e.g. Car loan" value={liabForm.name} onChange={(v) => setLiabForm((f) => ({ ...f, name: v }))} grow={1.4} />
+                    <Field label="Balance" type="number" placeholder="0" value={liabForm.balance} onChange={(v) => setLiabForm((f) => ({ ...f, balance: v }))} />
+                    <Field label="Original" type="number" placeholder="0" value={liabForm.original} onChange={(v) => setLiabForm((f) => ({ ...f, original: v }))} />
+                    <Field label="Rate %" type="number" step="0.01" placeholder="0.00" value={liabForm.rate} onChange={(v) => setLiabForm((f) => ({ ...f, rate: v }))} />
+                    <Field label="Monthly" type="number" placeholder="0" value={liabForm.payment} onChange={(v) => setLiabForm((f) => ({ ...f, payment: v }))} />
+                    <button type="button" className="pf-btn pf-btn--solid" onClick={saveLiability}>Save</button>
+                    <button type="button" className="pf-btn" onClick={() => setLiabForm(null)}>Cancel</button>
+                  </div>
+                </div>
+              )}
 
               {isOpen && (
                 <div className="pf-facts">
