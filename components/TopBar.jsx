@@ -17,6 +17,8 @@ export default function TopBar({ children }) {
   const [menuOpen, setMenuOpen] = useState(false);
 
   const onLedger = pathname === "/income-expense";
+  const onPortfolio = pathname === "/assets-liabilities";
+  const onHome = !onLedger && !onPortfolio;
 
   // Close the menu when the route it navigated to has arrived.
   useEffect(() => {
@@ -28,14 +30,14 @@ export default function TopBar({ children }) {
   // there is no resize listener and both server and client render the same.
   const links = (
     <>
-      <Link href="/" className={onLedger ? "topbar-link" : "topbar-link topbar-link--active"}>
-        <HomeIcon color={onLedger ? "#14150f" : "#fff"} />
+      <Link href="/" className={onHome ? "topbar-link topbar-link--active" : "topbar-link"}>
+        <HomeIcon color={onHome ? "#fff" : "#14150f"} />
         Home
       </Link>
-      <div className="topbar-link topbar-link--off" title="Coming soon" aria-disabled="true">
-        <LedgerIcon />
+      <Link href="/assets-liabilities" className={onPortfolio ? "topbar-link topbar-link--active" : "topbar-link"}>
+        <LedgerIcon color={onPortfolio ? "#fff" : "#14150f"} />
         Assets &amp; Liabilities
-      </div>
+      </Link>
       <Link href="/income-expense" className={onLedger ? "topbar-link topbar-link--active" : "topbar-link"}>
         <BarsIcon color={onLedger ? "#fff" : "#14150f"} />
         Income / Expense
